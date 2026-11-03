@@ -64,7 +64,6 @@
         .glow-btn-cyan {
             box-shadow: 0 0 15px rgba(6, 182, 212, 0.35);
         }
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -78,13 +77,12 @@
         }
     </style>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDK Modules -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration & Initialization
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'ultra-chargers-app';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
             apiKey: "demo-key",
@@ -95,35 +93,68 @@
             appId: "1:123456789:web:abcdef"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let dbDocRef = null;
 
-        // App Globals
-        window.firebaseDb = db;
-        window.appId = appId;
-        window.dbDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tracker', 'main_state');
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+            window.firebaseDb = db;
+            dbDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tracker', 'main_state');
+            window.dbDocRef = dbDocRef;
 
-        // Authenticate User
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                console.log("Firebase Auth Successful");
-                window.setupFirestoreListener();
-            } catch (err) {
-                console.error("Auth error:", err);
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
             }
+            console.log("Firebase Auth & DB Ready");
+            initFirestoreListener(setDoc, getDoc, onSnapshot);
+        } catch (err) {
+            console.warn("Firebase fallback mode:", err);
         }
 
-        initAuth();
+        function initFirestoreListener(setDoc, getDoc, onSnapshot) {
+            if (!window.dbDocRef) return;
+
+            getDoc(window.dbDocRef).then(snapshot => {
+                if (!snapshot.exists()) {
+                    setDoc(window.dbDocRef, window.appState);
+                }
+            }).catch(e => console.warn("Firestore fetch err:", e));
+
+            onSnapshot(window.dbDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data && Array.isArray(data.sales)) {
+                        window.appState.sales = data.sales;
+                        window.updateDashboard();
+                    }
+                }
+            }, (error) => {
+                console.warn("Firestore snapshot listener:", error);
+            });
+        }
+
+        window.syncToFirestore = async function() {
+            if (!window.dbDocRef) {
+                localStorage.setItem('ultra_chargers_state', JSON.stringify(window.appState));
+                window.updateDashboard();
+                return;
+            }
+            try {
+                await setDoc(window.dbDocRef, window.appState);
+            } catch(e) {
+                console.warn("Cloud save error, fallback to local:", e);
+                localStorage.setItem('ultra_chargers_state', JSON.stringify(window.appState));
+                window.updateDashboard();
+            }
+        };
     </script>
 </head>
 <body class="min-h-screen pb-12">
-    <!-- Top Header -->
+
+    <!-- Top Navigation Header -->
     <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 sm:px-6">
         <div class="max-w-6xl mx-auto flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -139,12 +170,10 @@
             </div>
             
             <div class="flex items-center space-x-2">
-                <!-- Deployment & Setup Info Button -->
                 <button onclick="openDeployModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition active:scale-95 text-xs font-semibold flex items-center space-x-1">
                     <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i>
                     <span class="hidden sm:inline">Setup / Render</span>
                 </button>
-                <!-- User Sign-in Indicator Button -->
                 <button onclick="openSignInModal()" id="activeUserBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 hover:bg-slate-700 transition active:scale-95 text-xs font-bold text-slate-200">
                     <i class="fa-solid fa-user-circle text-emerald-400 text-sm"></i>
                     <span id="activeUserName">Select User</span>
@@ -159,7 +188,7 @@
 
     <main class="max-w-6xl mx-auto px-4 pt-6 space-y-6">
 
-        <!-- Batch Info Banner -->
+        <!-- Financial Overview Banner -->
         <div class="glow-card rounded-2xl p-4 border border-emerald-500/20 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
@@ -177,7 +206,6 @@
                 </div>
             </div>
             
-            <!-- Quick Progress Bar -->
             <div class="w-full md:w-64 space-y-1.5">
                 <div class="flex justify-between text-xs font-semibold">
                     <span class="text-slate-400">Chargers Sold</span>
@@ -193,7 +221,6 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <!-- Total Revenue -->
             <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-20 h-20 bg-cyan-500/10 rounded-full blur-xl pointer-events-none"></div>
                 <div class="flex items-center justify-between text-slate-400 mb-2">
                     <span class="text-xs font-semibold uppercase tracking-wider">Total Revenue</span>
                     <i class="fa-solid fa-wallet text-cyan-400"></i>
@@ -206,7 +233,6 @@
 
             <!-- Net Profit -->
             <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl pointer-events-none"></div>
                 <div class="flex items-center justify-between text-slate-400 mb-2">
                     <span class="text-xs font-semibold uppercase tracking-wider">Net Profit</span>
                     <i class="fa-solid fa-chart-line text-emerald-400"></i>
@@ -219,7 +245,6 @@
 
             <!-- Remaining Stock -->
             <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-20 h-20 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
                 <div class="flex items-center justify-between text-slate-400 mb-2">
                     <span class="text-xs font-semibold uppercase tracking-wider">Stock Left</span>
                     <i class="fa-solid fa-box text-purple-400"></i>
@@ -232,7 +257,6 @@
 
             <!-- Break-even Status -->
             <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-20 h-20 bg-amber-500/10 rounded-full blur-xl pointer-events-none"></div>
                 <div class="flex items-center justify-between text-slate-400 mb-2">
                     <span class="text-xs font-semibold uppercase tracking-wider">Break-Even</span>
                     <i class="fa-solid fa-scale-balanced text-amber-400"></i>
@@ -254,10 +278,9 @@
                     </span>
                     <h2 class="font-bold text-base sm:text-lg text-white">Log Sale as <span id="currentSellerLabel" class="text-emerald-400">User</span></h2>
                 </div>
-                <span class="text-xs font-medium text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">Instant Live Sync</span>
+                <span class="text-xs font-medium text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">Instant Sync</span>
             </div>
 
-            <!-- Sale Action Buttons -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <button onclick="logSale(30)" id="btnSell30" class="glow-btn-green py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl transition active:scale-95 flex items-center justify-center space-x-2 text-lg">
                     <i class="fa-solid fa-bolt text-emerald-200"></i>
@@ -278,25 +301,21 @@
 
         <!-- CHARTS SECTION -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Cumulative Revenue & Target Chart -->
             <div class="glow-card rounded-2xl p-5 lg:col-span-2 space-y-4 flex flex-col justify-between">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-white text-base">Financial Trajectory</h3>
-                        <p class="text-xs text-slate-400">Revenue vs $170 Cost Basis vs $300 Target</p>
-                    </div>
+                <div>
+                    <h3 class="font-bold text-white text-base">Financial Trajectory</h3>
+                    <p class="text-xs text-slate-400">Revenue vs $170 Cost Basis vs $300 Target</p>
                 </div>
                 <div class="h-64 w-full relative">
                     <canvas id="financialChart"></canvas>
                 </div>
             </div>
 
-            <!-- Friend Contribution Breakdown Chart -->
             <div class="glow-card rounded-2xl p-5 space-y-4 flex flex-col justify-between">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="font-bold text-white text-base">Sales by Partner</h3>
-                        <p class="text-xs text-slate-400">Revenue generated per team member</p>
+                        <p class="text-xs text-slate-400">Revenue per team member</p>
                     </div>
                     <i class="fa-solid fa-trophy text-amber-400"></i>
                 </div>
@@ -308,8 +327,6 @@
 
         <!-- ACTIVITY LOG & DETAILED SQUAD BREAKDOWN -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Activity Log -->
             <div class="glow-card rounded-2xl p-5 lg:col-span-2 space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div class="flex items-center space-x-2">
@@ -319,23 +336,17 @@
                     <span id="logCountBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">0 Events</span>
                 </div>
 
-                <div id="activityLogContainer" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-                    <!-- Dynamic Log Items -->
-                </div>
+                <div id="activityLogContainer" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- Detailed Performance -->
             <div class="glow-card rounded-2xl p-5 space-y-4">
                 <div class="border-b border-slate-800 pb-3">
                     <h3 class="font-bold text-white text-base">Partner Leaderboard</h3>
                     <p class="text-xs text-slate-400">Individual unit & revenue breakdown</p>
                 </div>
 
-                <div id="friendStatsList" class="space-y-3">
-                    <!-- Dynamic Cards -->
-                </div>
+                <div id="friendStatsList" class="space-y-3"></div>
             </div>
-
         </div>
 
     </main>
@@ -352,7 +363,7 @@
             </div>
 
             <div class="space-y-2.5">
-                <button onclick="selectUser('Kolton')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-emerald-500/40 hover:border-emerald-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
+                <button type="button" onclick="selectUser('Kolton')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-emerald-500/40 hover:border-emerald-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
                     <span class="flex items-center space-x-3">
                         <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-sm">K</span>
                         <span class="group-hover:text-emerald-400 transition">Kolton</span>
@@ -360,7 +371,7 @@
                     <span class="text-xs text-slate-400 font-normal bg-slate-800 px-2 py-1 rounded">Seller</span>
                 </button>
 
-                <button onclick="selectUser('Tyson')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-cyan-500/40 hover:border-cyan-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
+                <button type="button" onclick="selectUser('Tyson')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-cyan-500/40 hover:border-cyan-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
                     <span class="flex items-center space-x-3">
                         <span class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-black text-sm">T</span>
                         <span class="group-hover:text-cyan-400 transition">Tyson</span>
@@ -368,7 +379,7 @@
                     <span class="text-xs text-slate-400 font-normal bg-slate-800 px-2 py-1 rounded">Seller</span>
                 </button>
 
-                <button onclick="selectUser('Korbin')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-purple-500/40 hover:border-purple-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
+                <button type="button" onclick="selectUser('Korbin')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-purple-500/40 hover:border-purple-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
                     <span class="flex items-center space-x-3">
                         <span class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-black text-sm">K</span>
                         <span class="group-hover:text-purple-400 transition">Korbin</span>
@@ -401,21 +412,58 @@
         </div>
     </div>
 
+    <!-- RENDER DEPLOYMENT & IPHONE PWA MODAL -->
+    <div id="deployModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glow-card rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-mobile-screen-button text-emerald-400"></i>
+                    Deployment & iPhone App Guide
+                </h3>
+                <button onclick="closeDeployModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+
+            <div class="space-y-4 text-xs text-slate-300">
+                <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-1">
+                    <h4 class="font-bold text-emerald-400 text-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud"></i> Live Real-Time Data
+                    </h4>
+                    <p class="leading-relaxed">
+                        Sales logged by Kolton or Tyson sync automatically across all devices.
+                    </p>
+                </div>
+
+                <div class="space-y-2">
+                    <h4 class="font-bold text-white text-sm flex items-center gap-1.5">
+                        <i class="fa-brands fa-apple text-slate-300"></i> Add to iPhone Home Screen:
+                    </h4>
+                    <ol class="list-decimal list-inside space-y-1.5 bg-slate-900 p-3 rounded-xl border border-slate-800">
+                        <li>Open your live URL in <strong>Safari</strong> on iPhone.</li>
+                        <li>Tap the <strong>Share</strong> icon (<i class="fa-solid fa-arrow-up-from-bracket"></i>).</li>
+                        <li>Tap <strong>"Add to Home Screen"</strong>.</li>
+                        <li>Launch it like a native iOS app!</li>
+                    </ol>
+                </div>
+            </div>
+
+            <button onclick="closeDeployModal()" class="w-full py-2.5 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition">Got it!</button>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-800 text-white px-4 py-3 rounded-xl border border-emerald-500/40 shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0">
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-800 text-white px-4 py-3 rounded-xl border border-emerald-500/40 shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
         <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
         <span id="toastMessage" class="text-sm font-medium">Recorded!</span>
     </div>
 
-    <!-- App Globals -->
     <script>
-        // Business Constants
         const TOTAL_UNITS = 10;
         const INITIAL_COST = 170;
         const TARGET_REVENUE = 300;
 
-        // Active State - Preloaded with 1 sale by TYSON
         let currentUser = localStorage.getItem('ultra_chargers_user') || 'Tyson';
+
+        // Preloaded initial state: Tyson sold charger #1 for $30
         let appState = {
             sales: [
                 {
@@ -427,19 +475,32 @@
             ]
         };
 
-        // Chart instances
+        const localSaved = localStorage.getItem('ultra_chargers_state');
+        if (localSaved) {
+            try {
+                const parsed = JSON.parse(localSaved);
+                if (parsed && Array.isArray(parsed.sales)) {
+                    appState = parsed;
+                }
+            } catch(e) {}
+        }
+
+        window.appState = appState;
         let financialChartInstance = null;
         let friendsChartInstance = null;
 
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', () => {
             updateUserUI();
             initCharts();
-            if(!localStorage.getItem('ultra_chargers_user')) {
-                openSignInModal();
-            }
-        };
+            updateDashboard();
 
-        // User Sign in Handling
+            if (!localStorage.getItem('ultra_chargers_user')) {
+                openSignInModal();
+            } else {
+                closeSignInModal();
+            }
+        });
+
         function openSignInModal() {
             document.getElementById('signInModal').classList.remove('hidden');
         }
@@ -461,45 +522,6 @@
             document.getElementById('currentSellerLabel').innerText = currentUser;
         }
 
-        // Firestore Listener for Live Updates across all users
-        window.setupFirestoreListener = function() {
-            const { onSnapshot } = window.firebaseModules || {};
-            // Listen to main doc
-            import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js").then(({ onSnapshot, setDoc, getDoc }) => {
-                
-                // Initialize default state if not present
-                getDoc(window.dbDocRef).then(snapshot => {
-                    if (!snapshot.exists()) {
-                        setDoc(window.dbDocRef, appState);
-                    }
-                });
-
-                // Listen real-time
-                onSnapshot(window.dbDocRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        if (data && Array.isArray(data.sales)) {
-                            appState.sales = data.sales;
-                            updateDashboard();
-                        }
-                    }
-                }, (error) => {
-                    console.error("Firestore snapshot error:", error);
-                });
-            });
-        };
-
-        // Save State to Firestore
-        async function syncToFirestore() {
-            try {
-                const { setDoc } = await import("https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js");
-                await setDoc(window.dbDocRef, appState);
-            } catch(e) {
-                console.error("Sync error:", e);
-            }
-        }
-
-        // Sale Actions
         function logSale(price) {
             if (appState.sales.length >= TOTAL_UNITS) {
                 showToast("All 10 chargers have been sold!", "warning");
@@ -514,36 +536,75 @@
             };
 
             appState.sales.push(newSale);
-            syncToFirestore();
+            if (window.syncToFirestore) {
+                window.syncToFirestore();
+            } else {
+                localStorage.setItem('ultra_chargers_state', JSON.stringify(appState));
+                updateDashboard();
+            }
             showToast(`Sale logged: $${price} by ${currentUser}`);
         }
 
         function undoSale(saleId) {
             appState.sales = appState.sales.filter(s => s.id !== saleId);
-            syncToFirestore();
+            if (window.syncToFirestore) {
+                window.syncToFirestore();
+            } else {
+                localStorage.setItem('ultra_chargers_state', JSON.stringify(appState));
+                updateDashboard();
+            }
             showToast("Sale entry removed.", "info");
         }
 
         function confirmResetData() {
-            if (currentUser !== 'Korbin') {
-                if(!confirm("Only Korbin or authorized team members should reset. Reset all sales back to 1 pre-sale ($30)?")) return;
-            } else {
-                if(!confirm("Korbin, are you sure you want to reset sales back to initial 1 sale?")) return;
-            }
+            const promptMsg = currentUser === 'Korbin' 
+                ? "Korbin, reset sales back to initial 1 sale by Tyson ($30)?" 
+                : "Reset all sales back to 1 sale by Tyson ($30)?";
+
+            if (!confirm(promptMsg)) return;
 
             appState.sales = [
                 {
                     id: Date.now(),
-                    user: 'Kolton',
+                    user: 'Tyson',
                     price: 30,
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' })
                 }
             ];
-            syncToFirestore();
-            showToast("Tracker reset to initial state.", "info");
+            
+            if (window.syncToFirestore) {
+                window.syncToFirestore();
+            } else {
+                localStorage.setItem('ultra_chargers_state', JSON.stringify(appState));
+                updateDashboard();
+            }
+            showToast("Tracker reset to initial sale.", "info");
         }
 
-        // Dashboard Rendering
+        function openCustomSaleModal() {
+            document.getElementById('customPriceModal').classList.remove('hidden');
+        }
+
+        function closeCustomSaleModal() {
+            document.getElementById('customPriceModal').classList.add('hidden');
+        }
+
+        function submitCustomSale() {
+            const val = parseFloat(document.getElementById('customPriceInput').value);
+            if (val > 0) {
+                logSale(val);
+                closeCustomSaleModal();
+            }
+        }
+
+        function openDeployModal() {
+            document.getElementById('deployModal').classList.remove('hidden');
+        }
+
+        function closeDeployModal() {
+            document.getElementById('deployModal').classList.add('hidden');
+        }
+
         function updateDashboard() {
             const soldCount = appState.sales.length;
             const remainingCount = TOTAL_UNITS - soldCount;
@@ -551,14 +612,11 @@
             const netProfit = totalRevenue - INITIAL_COST;
             const breakEvenDiff = INITIAL_COST - totalRevenue;
 
-            // Progress Bar
             document.getElementById('unitsProgressText').innerText = `${soldCount} / ${TOTAL_UNITS}`;
             document.getElementById('unitsProgressBar').style.width = `${(soldCount / TOTAL_UNITS) * 100}%`;
 
-            // Stat 1: Revenue
             document.getElementById('statRevenue').innerText = `$${totalRevenue}`;
 
-            // Stat 2: Profit
             const profitElem = document.getElementById('statProfit');
             if (netProfit >= 0) {
                 profitElem.innerText = `+$${netProfit}`;
@@ -568,11 +626,9 @@
                 profitElem.className = "text-2xl sm:text-3xl font-black text-rose-400 tracking-tight";
             }
 
-            // Stat 3: Stock Remaining
             document.getElementById('statRemaining').innerHTML = `${remainingCount} <span class="text-sm font-medium text-slate-400">/ ${TOTAL_UNITS}</span>`;
-            document.getElementById('statSoldText').innerText = `${soldCount} chargers sold`;
+            document.getElementById('statSoldText').innerText = `${soldCount} sold so far`;
 
-            // Stat 4: Break Even
             const breakEvenElem = document.getElementById('statBreakEven');
             const breakEvenSub = document.getElementById('statBreakEvenSub');
             if (breakEvenDiff > 0) {
@@ -583,18 +639,6 @@
                 breakEvenElem.innerText = "COST COVERED! 🎉";
                 breakEvenElem.className = "text-xl sm:text-2xl font-black text-emerald-400 tracking-tight";
                 breakEvenSub.innerText = `$${Math.abs(breakEvenDiff)} pure net profit!`;
-            }
-
-            // Disable buttons if sold out
-            const isFull = soldCount >= TOTAL_UNITS;
-            document.getElementById('btnSell30').disabled = isFull;
-            document.getElementById('btnSell25').disabled = isFull;
-            if (isFull) {
-                document.getElementById('btnSell30').classList.add('opacity-50', 'cursor-not-allowed');
-                document.getElementById('btnSell25').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('btnSell30').classList.remove('opacity-50', 'cursor-not-allowed');
-                document.getElementById('btnSell25').classList.remove('opacity-50', 'cursor-not-allowed');
             }
 
             renderActivityLog();
@@ -684,7 +728,6 @@
             }).join('');
         }
 
-        // Charts logic
         function initCharts() {
             const ctxFin = document.getElementById('financialChart').getContext('2d');
             financialChartInstance = new Chart(ctxFin, {
@@ -716,6 +759,17 @@
             });
         }
 
+        function updateCharts() {
+            if (financialChartInstance) {
+                financialChartInstance.data = getFinancialChartData();
+                financialChartInstance.update();
+            }
+            if (friendsChartInstance) {
+                friendsChartInstance.data = getFriendsChartData();
+                friendsChartInstance.update();
+            }
+        }
+
         function getFinancialChartData() {
             let cumulativeRev = 0;
             const revData = [0];
@@ -731,7 +785,7 @@
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Cumulative Revenue ($)',
+                        label: 'Revenue ($)',
                         data: revData,
                         backgroundColor: 'rgba(16, 185, 129, 0.7)',
                         borderColor: '#10b981',
@@ -778,65 +832,39 @@
                     borderColor: '#0f172a'
                 }]
             };
-    <!-- RENDER DEPLOYMENT & IPHONE PWA MODAL -->
-    <div id="deployModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="glow-card rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-mobile-screen-button text-emerald-400"></i>
-                    Deployment & iPhone App Guide
-                </h3>
-                <button onclick="closeDeployModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="space-y-4 text-xs text-slate-300">
-                <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-1">
-                    <h4 class="font-bold text-emerald-400 text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-cloud"></i> How Real-time Firebase Sync Works
-                    </h4>
-                    <p class="leading-relaxed">
-                        This site is pre-built with Firebase Firestore JS SDK. When deployed to <strong>Render (as a Static Site)</strong>, GitHub Pages, or Netlify, any sale logged by Kolton, Tyson, or Korbin will sync across all 3 phones automatically.
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <h4 class="font-bold text-white text-sm flex items-center gap-1.5">
-                        <i class="fa-brands fa-apple text-slate-300"></i> Add to iPhone Home Screen (PWA):
-                    </h4>
-                    <ol class="list-decimal list-inside space-y-1.5 bg-slate-900 p-3 rounded-xl border border-slate-800">
-                        <li>Open your Render URL in <strong>Safari</strong> on iPhone.</li>
-                        <li>Tap the <strong>Share</strong> button at the bottom of Safari (<i class="fa-solid fa-arrow-up-from-bracket"></i>).</li>
-                        <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
-                        <li>Name it <strong>Ultra Track</strong> and tap Add.</li>
-                        <li>Launch it directly from your home screen like a native app!</li>
-                    </ol>
-                </div>
-
-                <div class="space-y-2">
-                    <h4 class="font-bold text-white text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-server text-cyan-400"></i> Free Deployment on Render:
-                    </h4>
-                    <ul class="list-disc list-inside space-y-1 bg-slate-900 p-3 rounded-xl border border-slate-800">
-                        <li>Create a free account on <strong class="text-white">Render.com</strong>.</li>
-                        <li>Create a new <strong>Static Site</strong>.</li>
-                        <li>Upload your <code class="text-emerald-400">index.html</code> file or connect your GitHub repository.</li>
-                        <li>Render gives you a free live URL (e.g. <code class="text-cyan-300">https://ultra-chargers.onrender.com</code>) to share with Tyson, Kolton & Korbin!</li>
-                    </ul>
-                </div>
-            </div>
-
-            <button onclick="closeDeployModal()" class="w-full py-2.5 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition">Got it!</button>
-        </div>
-    </div>
-
-    <!-- JAVASCRIPT APP MODAL HANDLERS -->
-    <script>
-        function openDeployModal() {
-            document.getElementById('deployModal').classList.remove('hidden');
         }
 
-        function closeDeployModal() {
-            document.getElementById('deployModal').classList.add('hidden');
+        function showToast(msg, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMessage.innerText = msg;
+            if (type === "warning") {
+                toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
+            } else if (type === "info") {
+                toastIcon.className = "fa-solid fa-circle-info text-cyan-400 text-lg";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            })[m]);
         }
     </script>
 </body>
