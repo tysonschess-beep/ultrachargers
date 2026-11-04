@@ -44,13 +44,13 @@
       </div>
       <div>
         <h1 class="font-bold text-base leading-none text-white">Ultra Chargers</h1>
-        <p class="text-xs text-slate-400 mt-0.5">Profit & Sales Tracker</p>
+        <p class="text-xs text-slate-400 mt-0.5" id="syncStatusText">Connecting Cloud...</p>
       </div>
     </div>
     
     <div class="flex items-center space-x-2">
       <button type="button" onclick="openModal('userModal')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold transition-all">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="syncIndicator"></span>
         <span id="activeUserLabel">Select Role</span>
       </button>
       <button type="button" onclick="openModal('guideModal')" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-xs font-bold border border-slate-700" title="Deployment & App Info">
@@ -127,7 +127,6 @@
 
     <!-- Visual Charts Section -->
     <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <!-- Cumulative Trajectory Chart -->
       <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
         <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
           <span>Financial Trajectory</span>
@@ -138,7 +137,6 @@
         </div>
       </div>
 
-      <!-- Seller Split Breakdown -->
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
         <div>
           <h3 class="text-sm font-bold text-slate-200 mb-3">Seller Breakdown</h3>
@@ -233,7 +231,7 @@
         <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
           <p class="font-semibold text-emerald-400 mb-1">Live Database Connection:</p>
           <p class="text-slate-400 leading-relaxed">
-            Firebase Firestore is fully configured with your project credentials (<code class="text-cyan-300">ultra-chargers</code>). All sales logged on any device sync across all 3 phones live.
+            Connected to Firebase project <code class="text-cyan-300">ultra-chargers</code>. Real-time multi-device cloud synchronization is active.
           </p>
         </div>
       </div>
@@ -242,9 +240,8 @@
     </div>
   </div>
 
-  <!-- Application Logic & Firebase Integration -->
+  <!-- Application Logic & Firestore Integration -->
   <script>
-    // Embedded Firebase Credentials
     const firebaseConfig = {
       apiKey: "AIzaSyCr9oRKHXDchgFtXncCST1_hVretfy7KfE",
       authDomain: "ultra-chargers.firebaseapp.com",
@@ -256,7 +253,6 @@
       measurementId: "G-ZFK5NG17QK"
     };
 
-    // State initialization
     let db = null;
     let currentUser = localStorage.getItem('uc_user') || 'Kolton';
 
@@ -275,11 +271,9 @@
 
     let appState = JSON.parse(localStorage.getItem('uc_state')) || defaultState;
 
-    // Chart instances
     let profitChartInstance = null;
     let sellerChartInstance = null;
 
-    // App Startup
     window.addEventListener('DOMContentLoaded', () => {
       initFirebase();
       setupUserUI();
@@ -293,7 +287,10 @@
         }
         db = firebase.firestore();
 
-        // Listen for real-time updates from cloud
+        document.getElementById('syncStatusText').innerText = "Live Cloud Synced";
+        document.getElementById('syncIndicator').className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+
+        // Listen for live database updates
         db.collection("chargers_batch").doc("active_batch")
           .onSnapshot((doc) => {
             if (doc.exists) {
@@ -301,14 +298,18 @@
               localStorage.setItem('uc_state', JSON.stringify(appState));
               renderDashboard();
             } else {
-              // Seed initial batch in cloud if document doesn't exist yet
+              // Seed initial batch document if missing
               db.collection("chargers_batch").doc("active_batch").set(defaultState);
             }
           }, (err) => {
-            console.warn("Firestore listener warning:", err);
+            console.error("Firestore sync error:", err);
+            document.getElementById('syncStatusText').innerText = "Offline Cache Mode";
+            document.getElementById('syncIndicator').className = "w-2.5 h-2.5 rounded-full bg-amber-400";
           });
       } catch (err) {
-        console.warn("Firebase initialization skipped, running in local mode:", err);
+        console.warn("Firebase initialization failed:", err);
+        document.getElementById('syncStatusText').innerText = "Local Mode Only";
+        document.getElementById('syncIndicator').className = "w-2.5 h-2.5 rounded-full bg-red-400";
       }
     }
 
@@ -330,7 +331,16 @@
 
       if (db) {
         db.collection("chargers_batch").doc("active_batch").set(appState)
-          .catch((err) => console.error("Error pushing update to Firebase:", err));
+          .then(() => {
+            document.getElementById('syncStatusText').innerText = "Synced to Cloud ⚡";
+            setTimeout(() => {
+              document.getElementById('syncStatusText').innerText = "Live Cloud Synced";
+            }, 2000);
+          })
+          .catch((err) => {
+            console.error("Cloud push failed:", err);
+            alert("Warning: Sale saved on your phone, but cloud sync failed. Check your Firebase rules.");
+          });
       }
     }
 
@@ -373,15 +383,12 @@
       const totalRevenue = sales.reduce((acc, s) => acc + s.price, 0);
       const netProfit = totalRevenue - appState.totalCost;
       const unitsSold = sales.length;
-      const unitsRemaining = Math.max(0, appState.totalBatchQty - unitsSold);
       const avgPrice = unitsSold > 0 ? (totalRevenue / unitsSold).toFixed(1) : 0;
       const remainingCostToBreakEven = Math.max(0, appState.totalCost - totalRevenue);
 
-      // Card 1: Revenue
       document.getElementById('statRevenue').innerText = `$${totalRevenue}`;
       document.getElementById('statAvgPrice').innerText = `Avg: $${avgPrice}/unit`;
 
-      // Card 2: Net Profit
       const profitEl = document.getElementById('statNetProfit');
       if (netProfit >= 0) {
         profitEl.innerText = `+$${netProfit}`;
@@ -391,12 +398,10 @@
         profitEl.className = "text-2xl font-extrabold text-amber-400 mt-1";
       }
 
-      // Card 3: Units Sold & Progress
       document.getElementById('statUnitsSold').innerText = `${unitsSold} / ${appState.totalBatchQty}`;
       const pct = (unitsSold / appState.totalBatchQty) * 100;
       document.getElementById('statProgressBar').style.width = `${pct}%`;
 
-      // Card 4: Break Even
       const breakEvenEl = document.getElementById('statBreakEven');
       const breakEvenSub = document.getElementById('statBreakEvenSub');
 
@@ -412,10 +417,7 @@
         breakEvenSub.innerText = `Need ~${needed} more sale${needed > 1 ? 's' : ''}`;
       }
 
-      // Activity Log Rendering
       renderActivityLog(sales);
-
-      // Charts Updates
       renderCharts(sales);
     }
 
@@ -453,7 +455,6 @@
     }
 
     function renderCharts(sales) {
-      // 1. Line Chart Data (Financial Trajectory)
       const chronologicalSales = [...sales].reverse();
       let cumulative = -appState.totalCost;
       const lineLabels = ['Start ($170 Cost)', ...chronologicalSales.map((_, idx) => `Sale #${idx + 1}`)];
@@ -485,9 +486,7 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false }
-          },
+          plugins: { legend: { display: false } },
           scales: {
             y: {
               grid: { color: 'rgba(51, 65, 85, 0.4)' },
@@ -501,7 +500,6 @@
         }
       });
 
-      // 2. Seller Breakdown Data
       const koltonSales = sales.filter(s => s.seller === 'Kolton');
       const tysonSales = sales.filter(s => s.seller === 'Tyson');
       const korbinSales = sales.filter(s => s.seller === 'Korbin');
@@ -531,7 +529,6 @@
         }
       });
 
-      // Seller Stats Text List
       document.getElementById('sellerStatsList').innerHTML = `
         <div class="flex justify-between items-center bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-800">
           <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Kolton:</span>
