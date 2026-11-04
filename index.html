@@ -1,871 +1,560 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full bg-slate-950">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ultra Chargers Profit Tracker</title>
-    
-    <!-- iOS Web App (PWA) Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Ultra Track">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0b0f19">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ultra Chargers" />
+  <title>Ultra Chargers - Profit Tracker</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            cyan: '#06b6d4',
-                            neon: '#10b981',
-                            accent: '#8b5cf6',
-                            dark: '#0f172a',
-                            card: '#1e293b'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0b0f19;
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .glow-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-        }
-        .glow-btn-green {
-            box-shadow: 0 0 15px rgba(34, 197, 94, 0.35);
-        }
-        .glow-btn-cyan {
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.35);
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.6);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(51, 65, 85, 0.8);
-            border-radius: 4px;
-        }
-    </style>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-    <!-- Firebase SDK Modules -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ultra-chargers-app';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "demo-key",
-            authDomain: "demo.firebaseapp.com",
-            projectId: "demo-project",
-            storageBucket: "demo.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
-        };
-
-        let dbDocRef = null;
-
-        try {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            window.firebaseDb = db;
-            dbDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'tracker', 'main_state');
-            window.dbDocRef = dbDocRef;
-
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-            console.log("Firebase Auth & DB Ready");
-            initFirestoreListener(setDoc, getDoc, onSnapshot);
-        } catch (err) {
-            console.warn("Firebase fallback mode:", err);
-        }
-
-        function initFirestoreListener(setDoc, getDoc, onSnapshot) {
-            if (!window.dbDocRef) return;
-
-            getDoc(window.dbDocRef).then(snapshot => {
-                if (!snapshot.exists()) {
-                    setDoc(window.dbDocRef, window.appState);
-                }
-            }).catch(e => console.warn("Firestore fetch err:", e));
-
-            onSnapshot(window.dbDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    if (data && Array.isArray(data.sales)) {
-                        window.appState.sales = data.sales;
-                        window.updateDashboard();
-                    }
-                }
-            }, (error) => {
-                console.warn("Firestore snapshot listener:", error);
-            });
-        }
-
-        window.syncToFirestore = async function() {
-            if (!window.dbDocRef) {
-                localStorage.setItem('ultra_chargers_state', JSON.stringify(window.appState));
-                window.updateDashboard();
-                return;
-            }
-            try {
-                await setDoc(window.dbDocRef, window.appState);
-            } catch(e) {
-                console.warn("Cloud save error, fallback to local:", e);
-                localStorage.setItem('ultra_chargers_state', JSON.stringify(window.appState));
-                window.updateDashboard();
-            }
-        };
-    </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 4px;
+    }
+  </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="h-full text-slate-100 flex flex-col justify-between overflow-x-hidden">
 
-    <!-- Top Navigation Header -->
-    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 sm:px-6">
-        <div class="max-w-6xl mx-auto flex items-center justify-between">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-xl shadow-lg shadow-cyan-500/20">
+        ⚡
+      </div>
+      <div>
+        <h1 class="font-bold text-base leading-none text-white">Ultra Chargers</h1>
+        <p class="text-xs text-slate-400 mt-0.5">Profit & Sales Tracker</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-2">
+      <button type="button" onclick="openModal('userModal')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold transition-all">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="activeUserLabel">Select Role</span>
+      </button>
+      <button type="button" onclick="openModal('guideModal')" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-xs font-bold border border-slate-700" title="Deployment & App Info">
+        📱
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-4xl w-full mx-auto p-4 space-y-6 pb-24">
+
+    <!-- Top KPI Cards Grid -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl relative overflow-hidden">
+        <div class="absolute -right-3 -bottom-3 text-5xl opacity-10">💰</div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Revenue</p>
+        <p class="text-2xl font-extrabold text-white mt-1" id="statRevenue">$0</p>
+        <span class="inline-block mt-2 text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-medium" id="statAvgPrice">Avg: $0/unit</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl relative overflow-hidden">
+        <div class="absolute -right-3 -bottom-3 text-5xl opacity-10">📈</div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Net Profit</p>
+        <p class="text-2xl font-extrabold text-emerald-400 mt-1" id="statNetProfit">$0</p>
+        <span class="inline-block mt-2 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium" id="statCostBreakdown">Cost: $170</span>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl relative overflow-hidden">
+        <div class="absolute -right-3 -bottom-3 text-5xl opacity-10">📦</div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Units Sold</p>
+        <p class="text-2xl font-extrabold text-cyan-400 mt-1" id="statUnitsSold">0 / 10</p>
+        <div class="w-full bg-slate-800 rounded-full h-1.5 mt-3 overflow-hidden">
+          <div id="statProgressBar" class="bg-cyan-400 h-1.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl relative overflow-hidden">
+        <div class="absolute -right-3 -bottom-3 text-5xl opacity-10">🎯</div>
+        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Break-Even Status</p>
+        <p class="text-xl font-extrabold mt-1" id="statBreakEven">$170 Left</p>
+        <span class="inline-block mt-2 text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-medium" id="statBreakEvenSub">Need ~5-6 more sales</span>
+      </div>
+    </section>
+
+    <!-- Quick Sales Action Panel -->
+    <section class="bg-gradient-to-r from-blue-900/40 via-slate-900 to-indigo-900/40 border border-blue-500/30 rounded-2xl p-5 shadow-xl">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>⚡ Log New Charger Sale</span>
+          </h2>
+          <p class="text-xs text-slate-300 mt-0.5">Click a quick button or enter custom amount when a customer buys.</p>
+        </div>
+        <span class="text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-full font-semibold" id="sellerBadge">Logged as: Kolton</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <button type="button" onclick="logSale(30)" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center space-x-2">
+          <span class="text-lg">💰</span>
+          <span>Sell for $30</span>
+        </button>
+
+        <button type="button" onclick="logSale(25)" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center space-x-2">
+          <span class="text-lg">🏷️</span>
+          <span>Sell for $25</span>
+        </button>
+
+        <div class="flex gap-2">
+          <input type="number" id="customPriceInput" placeholder="Custom $" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400" min="1" max="100" />
+          <button type="button" onclick="logCustomSale()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 rounded-xl text-sm transition-all">Log</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Charts Section -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Cumulative Trajectory Chart -->
+      <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
+          <span>Financial Trajectory</span>
+          <span class="text-xs text-slate-500 font-normal">Initial Batch: $170 Cost</span>
+        </h3>
+        <div class="h-56 relative">
+          <canvas id="profitChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Seller Split Breakdown -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+        <div>
+          <h3 class="text-sm font-bold text-slate-200 mb-3">Seller Breakdown</h3>
+          <div class="h-40 relative flex items-center justify-center">
+            <canvas id="sellerChart"></canvas>
+          </div>
+        </div>
+        <div id="sellerStatsList" class="space-y-2 mt-4 text-xs">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity Log -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold text-slate-200">Recent Sales Log</h3>
+        <span class="text-xs text-slate-500" id="activityCount">0 Entries</span>
+      </div>
+      <div id="activityLog" class="space-y-2.5 max-h-60 overflow-y-auto custom-scrollbar pr-1">
+        <!-- Entries will render here -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Sign In Modal -->
+  <div id="userModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl">
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto text-xl mb-2">👤</div>
+        <h2 class="text-lg font-bold text-white">Who is using this device?</h2>
+        <p class="text-xs text-slate-400 mt-1">Select your profile to attribute sales correctly.</p>
+      </div>
+
+      <div class="space-y-3">
+        <button type="button" onclick="selectUser('Kolton')" class="w-full bg-slate-800 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-500/50 p-3 rounded-xl flex items-center justify-between transition-all group">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">⚡</span>
+            <div class="text-left">
+              <p class="text-sm font-bold text-white group-hover:text-cyan-400">Kolton</p>
+              <p class="text-[10px] text-slate-400">Seller</p>
+            </div>
+          </div>
+          <span class="text-xs text-slate-500 group-hover:text-cyan-400">Select →</span>
+        </button>
+
+        <button type="button" onclick="selectUser('Tyson')" class="w-full bg-slate-800 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-500/50 p-3 rounded-xl flex items-center justify-between transition-all group">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">⚡</span>
+            <div class="text-left">
+              <p class="text-sm font-bold text-white group-hover:text-cyan-400">Tyson</p>
+              <p class="text-[10px] text-slate-400">Seller</p>
+            </div>
+          </div>
+          <span class="text-xs text-slate-500 group-hover:text-cyan-400">Select →</span>
+        </button>
+
+        <button type="button" onclick="selectUser('Korbin')" class="w-full bg-slate-800 hover:bg-purple-500/20 border border-slate-700 hover:border-purple-500/50 p-3 rounded-xl flex items-center justify-between transition-all group">
+          <div class="flex items-center space-x-3">
+            <span class="text-lg">👑</span>
+            <div class="text-left">
+              <p class="text-sm font-bold text-white group-hover:text-purple-400">Korbin</p>
+              <p class="text-[10px] text-slate-400">Overseer / Operations</p>
+            </div>
+          </div>
+          <span class="text-xs text-slate-500 group-hover:text-purple-400">Select →</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- iOS / App Info Modal -->
+  <div id="guideModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-base text-white">📱 iPhone App Installation</h3>
+        <button type="button" onclick="closeModal('guideModal')" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+      
+      <div class="space-y-4 text-xs text-slate-300">
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+          <p class="font-semibold text-cyan-400 mb-1">Add to iPhone Home Screen:</p>
+          <ol class="list-decimal list-inside space-y-1 text-slate-400">
+            <li>Open this URL in <strong>Safari</strong> on iPhone.</li>
+            <li>Tap the <strong>Share button</strong> (square with arrow up).</li>
+            <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
+            <li>Launch it like a native app directly from your home screen!</li>
+          </ol>
+        </div>
+
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+          <p class="font-semibold text-emerald-400 mb-1">Live Database Connection:</p>
+          <p class="text-slate-400 leading-relaxed">
+            Firebase Firestore is fully configured with your project credentials (<code class="text-cyan-300">ultra-chargers</code>). All sales logged on any device sync across all 3 phones live.
+          </p>
+        </div>
+      </div>
+
+      <button type="button" onclick="closeModal('guideModal')" class="w-full mt-5 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs">Close</button>
+    </div>
+  </div>
+
+  <!-- Application Logic & Firebase Integration -->
+  <script>
+    // Embedded Firebase Credentials
+    const firebaseConfig = {
+      apiKey: "AIzaSyCr9oRKHXDchgFtXncCST1_hVretfy7KfE",
+      authDomain: "ultra-chargers.firebaseapp.com",
+      databaseURL: "https://ultra-chargers-default-rtdb.firebaseio.com",
+      projectId: "ultra-chargers",
+      storageBucket: "ultra-chargers.firebasestorage.app",
+      messagingSenderId: "687963494978",
+      appId: "1:687963494978:web:b51071ee095bacef5e6bdb",
+      measurementId: "G-ZFK5NG17QK"
+    };
+
+    // State initialization
+    let db = null;
+    let currentUser = localStorage.getItem('uc_user') || 'Kolton';
+
+    const defaultState = {
+      totalCost: 170,
+      totalBatchQty: 10,
+      sales: [
+        {
+          id: 'initial_sale_1',
+          seller: 'Tyson',
+          price: 30,
+          timestamp: new Date().toISOString()
+        }
+      ]
+    };
+
+    let appState = JSON.parse(localStorage.getItem('uc_state')) || defaultState;
+
+    // Chart instances
+    let profitChartInstance = null;
+    let sellerChartInstance = null;
+
+    // App Startup
+    window.addEventListener('DOMContentLoaded', () => {
+      initFirebase();
+      setupUserUI();
+      renderDashboard();
+    });
+
+    function initFirebase() {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+
+        // Listen for real-time updates from cloud
+        db.collection("chargers_batch").doc("active_batch")
+          .onSnapshot((doc) => {
+            if (doc.exists) {
+              appState = doc.data();
+              localStorage.setItem('uc_state', JSON.stringify(appState));
+              renderDashboard();
+            } else {
+              // Seed initial batch in cloud if document doesn't exist yet
+              db.collection("chargers_batch").doc("active_batch").set(defaultState);
+            }
+          }, (err) => {
+            console.warn("Firestore listener warning:", err);
+          });
+      } catch (err) {
+        console.warn("Firebase initialization skipped, running in local mode:", err);
+      }
+    }
+
+    function selectUser(name) {
+      currentUser = name;
+      localStorage.setItem('uc_user', name);
+      setupUserUI();
+      closeModal('userModal');
+    }
+
+    function setupUserUI() {
+      document.getElementById('activeUserLabel').innerText = currentUser;
+      document.getElementById('sellerBadge').innerText = `Logged as: ${currentUser}`;
+    }
+
+    function syncState() {
+      localStorage.setItem('uc_state', JSON.stringify(appState));
+      renderDashboard();
+
+      if (db) {
+        db.collection("chargers_batch").doc("active_batch").set(appState)
+          .catch((err) => console.error("Error pushing update to Firebase:", err));
+      }
+    }
+
+    function logSale(price) {
+      const numPrice = Number(price);
+      if (isNaN(numPrice) || numPrice <= 0) return;
+
+      if (appState.sales.length >= appState.totalBatchQty) {
+        alert("All 10 chargers in this batch have already been logged as sold!");
+        return;
+      }
+
+      const newSale = {
+        id: 'sale_' + Date.now(),
+        seller: currentUser,
+        price: numPrice,
+        timestamp: new Date().toISOString()
+      };
+
+      appState.sales.unshift(newSale);
+      syncState();
+    }
+
+    function logCustomSale() {
+      const input = document.getElementById('customPriceInput');
+      const val = parseFloat(input.value);
+      if (val && val > 0) {
+        logSale(val);
+        input.value = '';
+      }
+    }
+
+    function deleteSale(id) {
+      appState.sales = appState.sales.filter(s => s.id !== id);
+      syncState();
+    }
+
+    function renderDashboard() {
+      const sales = appState.sales || [];
+      const totalRevenue = sales.reduce((acc, s) => acc + s.price, 0);
+      const netProfit = totalRevenue - appState.totalCost;
+      const unitsSold = sales.length;
+      const unitsRemaining = Math.max(0, appState.totalBatchQty - unitsSold);
+      const avgPrice = unitsSold > 0 ? (totalRevenue / unitsSold).toFixed(1) : 0;
+      const remainingCostToBreakEven = Math.max(0, appState.totalCost - totalRevenue);
+
+      // Card 1: Revenue
+      document.getElementById('statRevenue').innerText = `$${totalRevenue}`;
+      document.getElementById('statAvgPrice').innerText = `Avg: $${avgPrice}/unit`;
+
+      // Card 2: Net Profit
+      const profitEl = document.getElementById('statNetProfit');
+      if (netProfit >= 0) {
+        profitEl.innerText = `+$${netProfit}`;
+        profitEl.className = "text-2xl font-extrabold text-emerald-400 mt-1";
+      } else {
+        profitEl.innerText = `-$${Math.abs(netProfit)}`;
+        profitEl.className = "text-2xl font-extrabold text-amber-400 mt-1";
+      }
+
+      // Card 3: Units Sold & Progress
+      document.getElementById('statUnitsSold').innerText = `${unitsSold} / ${appState.totalBatchQty}`;
+      const pct = (unitsSold / appState.totalBatchQty) * 100;
+      document.getElementById('statProgressBar').style.width = `${pct}%`;
+
+      // Card 4: Break Even
+      const breakEvenEl = document.getElementById('statBreakEven');
+      const breakEvenSub = document.getElementById('statBreakEvenSub');
+
+      if (remainingCostToBreakEven <= 0) {
+        breakEvenEl.innerText = "BROKEN EVEN! 🎉";
+        breakEvenEl.className = "text-xl font-extrabold text-emerald-400 mt-1";
+        breakEvenSub.innerText = "All future sales are pure profit!";
+      } else {
+        breakEvenEl.innerText = `$${remainingCostToBreakEven} Left`;
+        breakEvenEl.className = "text-xl font-extrabold text-cyan-400 mt-1";
+        const avgUnit = unitsSold > 0 ? (totalRevenue / unitsSold) : 27.5;
+        const needed = Math.ceil(remainingCostToBreakEven / avgUnit);
+        breakEvenSub.innerText = `Need ~${needed} more sale${needed > 1 ? 's' : ''}`;
+      }
+
+      // Activity Log Rendering
+      renderActivityLog(sales);
+
+      // Charts Updates
+      renderCharts(sales);
+    }
+
+    function renderActivityLog(sales) {
+      const container = document.getElementById('activityLog');
+      document.getElementById('activityCount').innerText = `${sales.length} Entry${sales.length !== 1 ? 'ies' : ''}`;
+
+      if (sales.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">No sales logged yet for this batch.</p>`;
+        return;
+      }
+
+      container.innerHTML = sales.map(s => {
+        const dateObj = new Date(s.timestamp);
+        const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        return `
+          <div class="flex items-center justify-between bg-slate-800/50 border border-slate-700/50 px-3 py-2 rounded-xl text-xs">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-cyan-500 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">
-                    <i class="fa-solid fa-bolt"></i>
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
-                        Ultra Chargers <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold border border-emerald-500/30">10-Pack</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">Kolton • Tyson • Korbin Venture</p>
-                </div>
+              <span class="w-7 h-7 rounded-lg ${s.seller === 'Kolton' ? 'bg-cyan-500/20 text-cyan-400' : s.seller === 'Tyson' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'} flex items-center justify-center font-bold">
+                ${s.seller.charAt(0)}
+              </span>
+              <div>
+                <p class="font-semibold text-slate-200"><span class="text-white">${s.seller}</span> sold a charger</p>
+                <p class="text-[10px] text-slate-500">${timeStr}</p>
+              </div>
             </div>
-            
-            <div class="flex items-center space-x-2">
-                <button onclick="openDeployModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition active:scale-95 text-xs font-semibold flex items-center space-x-1">
-                    <i class="fa-solid fa-cloud-arrow-up text-cyan-400"></i>
-                    <span class="hidden sm:inline">Setup / Render</span>
-                </button>
-                <button onclick="openSignInModal()" id="activeUserBtn" class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700 hover:bg-slate-700 transition active:scale-95 text-xs font-bold text-slate-200">
-                    <i class="fa-solid fa-user-circle text-emerald-400 text-sm"></i>
-                    <span id="activeUserName">Select User</span>
-                    <i class="fa-solid fa-chevron-down text-slate-500 text-[10px]"></i>
-                </button>
-                <button onclick="confirmResetData()" class="p-2 rounded-xl bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition active:scale-95" title="Reset All Sales">
-                    <i class="fa-solid fa-rotate-left"></i>
-                </button>
+            <div class="flex items-center space-x-3">
+              <span class="font-bold text-emerald-400">+$${s.price}</span>
+              <button type="button" onclick="deleteSale('${s.id}')" class="text-slate-500 hover:text-red-400 text-xs px-1" title="Undo / Delete entry">✕</button>
             </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderCharts(sales) {
+      // 1. Line Chart Data (Financial Trajectory)
+      const chronologicalSales = [...sales].reverse();
+      let cumulative = -appState.totalCost;
+      const lineLabels = ['Start ($170 Cost)', ...chronologicalSales.map((_, idx) => `Sale #${idx + 1}`)];
+      const lineData = [-appState.totalCost];
+
+      chronologicalSales.forEach(s => {
+        cumulative += s.price;
+        lineData.push(cumulative);
+      });
+
+      const ctxProfit = document.getElementById('profitChart').getContext('2d');
+      if (profitChartInstance) profitChartInstance.destroy();
+
+      profitChartInstance = new Chart(ctxProfit, {
+        type: 'line',
+        data: {
+          labels: lineLabels,
+          datasets: [{
+            label: 'Net Balance ($)',
+            data: lineData,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: lineData.map(v => v >= 0 ? '#34d399' : '#f87171')
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              grid: { color: 'rgba(51, 65, 85, 0.4)' },
+              ticks: { color: '#94a3b8', font: { size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8', font: { size: 10 } }
+            }
+          }
+        }
+      });
+
+      // 2. Seller Breakdown Data
+      const koltonSales = sales.filter(s => s.seller === 'Kolton');
+      const tysonSales = sales.filter(s => s.seller === 'Tyson');
+      const korbinSales = sales.filter(s => s.seller === 'Korbin');
+
+      const koltonTotal = koltonSales.reduce((acc, s) => acc + s.price, 0);
+      const tysonTotal = tysonSales.reduce((acc, s) => acc + s.price, 0);
+      const korbinTotal = korbinSales.reduce((acc, s) => acc + s.price, 0);
+
+      const ctxSeller = document.getElementById('sellerChart').getContext('2d');
+      if (sellerChartInstance) sellerChartInstance.destroy();
+
+      sellerChartInstance = new Chart(ctxSeller, {
+        type: 'doughnut',
+        data: {
+          labels: ['Kolton', 'Tyson', 'Korbin'],
+          datasets: [{
+            data: [koltonSales.length || 0.1, tysonSales.length || 0.1, korbinSales.length || 0.1],
+            backgroundColor: ['#38bdf8', '#60a5fa', '#c084fc'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '70%'
+        }
+      });
+
+      // Seller Stats Text List
+      document.getElementById('sellerStatsList').innerHTML = `
+        <div class="flex justify-between items-center bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Kolton:</span>
+          <span class="font-bold text-white">${koltonSales.length} sold ($${koltonTotal})</span>
         </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto px-4 pt-6 space-y-6">
-
-        <!-- Financial Overview Banner -->
-        <div class="glow-card rounded-2xl p-4 border border-emerald-500/20 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                    <i class="fa-solid fa-boxes-packing text-2xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-sm font-semibold uppercase tracking-wider text-slate-400">Batch Financial Overview</h2>
-                    <div class="flex flex-wrap items-center gap-2 sm:gap-3 mt-1 text-xs sm:text-sm font-medium">
-                        <span class="text-white">Bought: <strong class="text-emerald-400">$170</strong></span>
-                        <span class="text-slate-600">•</span>
-                        <span class="text-white">Stock: <strong class="text-cyan-400">10 Pack</strong></span>
-                        <span class="text-slate-600">•</span>
-                        <span class="text-white">Target Rev: <strong class="text-amber-400">$300</strong></span>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="w-full md:w-64 space-y-1.5">
-                <div class="flex justify-between text-xs font-semibold">
-                    <span class="text-slate-400">Chargers Sold</span>
-                    <span id="unitsProgressText" class="text-emerald-400">0 / 10</span>
-                </div>
-                <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
-                    <div id="unitsProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-            </div>
+        <div class="flex justify-between items-center bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-400"></span> Tyson:</span>
+          <span class="font-bold text-white">${tysonSales.length} sold ($${tysonTotal})</span>
         </div>
-
-        <!-- STATS CARDS GRID -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <!-- Total Revenue -->
-            <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Total Revenue</span>
-                    <i class="fa-solid fa-wallet text-cyan-400"></i>
-                </div>
-                <div>
-                    <div id="statRevenue" class="text-2xl sm:text-3xl font-black text-white tracking-tight">$0</div>
-                    <p class="text-xs text-slate-400 mt-1">Goal: <span class="text-slate-200 font-semibold">$300</span></p>
-                </div>
-            </div>
-
-            <!-- Net Profit -->
-            <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Net Profit</span>
-                    <i class="fa-solid fa-chart-line text-emerald-400"></i>
-                </div>
-                <div>
-                    <div id="statProfit" class="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">$0</div>
-                    <p class="text-xs text-slate-400 mt-1">Revenue minus $170 cost</p>
-                </div>
-            </div>
-
-            <!-- Remaining Stock -->
-            <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Stock Left</span>
-                    <i class="fa-solid fa-box text-purple-400"></i>
-                </div>
-                <div>
-                    <div id="statRemaining" class="text-2xl sm:text-3xl font-black text-white tracking-tight">10 <span class="text-sm font-medium text-slate-400">/ 10</span></div>
-                    <p id="statSoldText" class="text-xs text-slate-400 mt-1">0 sold so far</p>
-                </div>
-            </div>
-
-            <!-- Break-even Status -->
-            <div class="glow-card rounded-2xl p-4 flex flex-col justify-between relative overflow-hidden">
-                <div class="flex items-center justify-between text-slate-400 mb-2">
-                    <span class="text-xs font-semibold uppercase tracking-wider">Break-Even</span>
-                    <i class="fa-solid fa-scale-balanced text-amber-400"></i>
-                </div>
-                <div>
-                    <div id="statBreakEven" class="text-xl sm:text-2xl font-black text-amber-400 tracking-tight">$170 Left</div>
-                    <p id="statBreakEvenSub" class="text-xs text-slate-400 mt-1">Needed to recoup cost</p>
-                </div>
-            </div>
+        <div class="flex justify-between items-center bg-slate-800/40 px-2 py-1.5 rounded-lg border border-slate-800">
+          <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Korbin:</span>
+          <span class="font-bold text-slate-400">${korbinSales.length} sold (${korbinSales.length ? '$' + korbinTotal : 'Overseeing'})</span>
         </div>
-
-        <!-- QUICK MOBILE SALE BUTTONS SECTION -->
-        <div class="glow-card rounded-2xl p-5 border-l-4 border-l-emerald-500 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                <div class="flex items-center space-x-2">
-                    <span class="flex h-3 w-3 relative">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                    <h2 class="font-bold text-base sm:text-lg text-white">Log Sale as <span id="currentSellerLabel" class="text-emerald-400">User</span></h2>
-                </div>
-                <span class="text-xs font-medium text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">Instant Sync</span>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button onclick="logSale(30)" id="btnSell30" class="glow-btn-green py-3.5 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold rounded-xl transition active:scale-95 flex items-center justify-center space-x-2 text-lg">
-                    <i class="fa-solid fa-bolt text-emerald-200"></i>
-                    <span>SELL FOR $30</span>
-                </button>
-                
-                <button onclick="logSale(25)" id="btnSell25" class="glow-btn-cyan py-3.5 px-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-extrabold rounded-xl transition active:scale-95 flex items-center justify-center space-x-2 text-lg">
-                    <i class="fa-solid fa-tag text-cyan-200"></i>
-                    <span>SELL FOR $25</span>
-                </button>
-
-                <button onclick="openCustomSaleModal()" class="py-3.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition active:scale-95 border border-slate-700 flex items-center justify-center space-x-2">
-                    <i class="fa-solid fa-sliders text-slate-400"></i>
-                    <span>Custom Price</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- CHARTS SECTION -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="glow-card rounded-2xl p-5 lg:col-span-2 space-y-4 flex flex-col justify-between">
-                <div>
-                    <h3 class="font-bold text-white text-base">Financial Trajectory</h3>
-                    <p class="text-xs text-slate-400">Revenue vs $170 Cost Basis vs $300 Target</p>
-                </div>
-                <div class="h-64 w-full relative">
-                    <canvas id="financialChart"></canvas>
-                </div>
-            </div>
-
-            <div class="glow-card rounded-2xl p-5 space-y-4 flex flex-col justify-between">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h3 class="font-bold text-white text-base">Sales by Partner</h3>
-                        <p class="text-xs text-slate-400">Revenue per team member</p>
-                    </div>
-                    <i class="fa-solid fa-trophy text-amber-400"></i>
-                </div>
-                <div class="h-64 w-full relative flex items-center justify-center">
-                    <canvas id="friendsChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- ACTIVITY LOG & DETAILED SQUAD BREAKDOWN -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="glow-card rounded-2xl p-5 lg:col-span-2 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div class="flex items-center space-x-2">
-                        <i class="fa-solid fa-list-check text-emerald-400"></i>
-                        <h3 class="font-bold text-white text-base">Live Activity Log</h3>
-                    </div>
-                    <span id="logCountBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">0 Events</span>
-                </div>
-
-                <div id="activityLogContainer" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
-            </div>
-
-            <div class="glow-card rounded-2xl p-5 space-y-4">
-                <div class="border-b border-slate-800 pb-3">
-                    <h3 class="font-bold text-white text-base">Partner Leaderboard</h3>
-                    <p class="text-xs text-slate-400">Individual unit & revenue breakdown</p>
-                </div>
-
-                <div id="friendStatsList" class="space-y-3"></div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- SIGN-IN / SELECT USER MODAL -->
-    <div id="signInModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="glow-card rounded-2xl max-w-sm w-full p-6 space-y-5 border border-slate-700 shadow-2xl">
-            <div class="text-center space-y-2">
-                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-cyan-500 mx-auto flex items-center justify-center text-slate-950 text-2xl font-black">
-                    <i class="fa-solid fa-bolt"></i>
-                </div>
-                <h3 class="text-xl font-extrabold text-white">Who are you?</h3>
-                <p class="text-xs text-slate-400">Select your profile to log sales or oversee business metrics</p>
-            </div>
-
-            <div class="space-y-2.5">
-                <button type="button" onclick="selectUser('Kolton')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-emerald-500/40 hover:border-emerald-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
-                    <span class="flex items-center space-x-3">
-                        <span class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-sm">K</span>
-                        <span class="group-hover:text-emerald-400 transition">Kolton</span>
-                    </span>
-                    <span class="text-xs text-slate-400 font-normal bg-slate-800 px-2 py-1 rounded">Seller</span>
-                </button>
-
-                <button type="button" onclick="selectUser('Tyson')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-cyan-500/40 hover:border-cyan-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
-                    <span class="flex items-center space-x-3">
-                        <span class="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-black text-sm">T</span>
-                        <span class="group-hover:text-cyan-400 transition">Tyson</span>
-                    </span>
-                    <span class="text-xs text-slate-400 font-normal bg-slate-800 px-2 py-1 rounded">Seller</span>
-                </button>
-
-                <button type="button" onclick="selectUser('Korbin')" class="w-full py-3.5 px-4 rounded-xl bg-slate-900 border border-purple-500/40 hover:border-purple-400 text-white font-bold flex items-center justify-between transition active:scale-95 group">
-                    <span class="flex items-center space-x-3">
-                        <span class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-black text-sm">K</span>
-                        <span class="group-hover:text-purple-400 transition">Korbin</span>
-                    </span>
-                    <span class="text-xs text-purple-300 font-semibold bg-purple-500/20 px-2 py-1 rounded">Overseer</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- CUSTOM PRICE MODAL -->
-    <div id="customPriceModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="glow-card rounded-2xl max-w-sm w-full p-6 space-y-4 border border-slate-700">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-bold text-white">Custom Price Sale</h3>
-                <button onclick="closeCustomSaleModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            <p class="text-xs text-slate-400">Enter custom negotiated amount for charger sale:</p>
-            <div class="space-y-2">
-                <label class="text-xs text-slate-300 font-medium">Price ($ USD)</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
-                    <input type="number" id="customPriceInput" min="1" max="100" value="28" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-8 pr-4 py-2 text-white font-bold focus:outline-none focus:border-emerald-500">
-                </div>
-            </div>
-            <div class="flex gap-2 pt-2">
-                <button onclick="closeCustomSaleModal()" class="w-1/2 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700">Cancel</button>
-                <button onclick="submitCustomSale()" class="w-1/2 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400">Confirm Sale</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- RENDER DEPLOYMENT & IPHONE PWA MODAL -->
-    <div id="deployModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-        <div class="glow-card rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-mobile-screen-button text-emerald-400"></i>
-                    Deployment & iPhone App Guide
-                </h3>
-                <button onclick="closeDeployModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-
-            <div class="space-y-4 text-xs text-slate-300">
-                <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl space-y-1">
-                    <h4 class="font-bold text-emerald-400 text-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-cloud"></i> Live Real-Time Data
-                    </h4>
-                    <p class="leading-relaxed">
-                        Sales logged by Kolton or Tyson sync automatically across all devices.
-                    </p>
-                </div>
-
-                <div class="space-y-2">
-                    <h4 class="font-bold text-white text-sm flex items-center gap-1.5">
-                        <i class="fa-brands fa-apple text-slate-300"></i> Add to iPhone Home Screen:
-                    </h4>
-                    <ol class="list-decimal list-inside space-y-1.5 bg-slate-900 p-3 rounded-xl border border-slate-800">
-                        <li>Open your live URL in <strong>Safari</strong> on iPhone.</li>
-                        <li>Tap the <strong>Share</strong> icon (<i class="fa-solid fa-arrow-up-from-bracket"></i>).</li>
-                        <li>Tap <strong>"Add to Home Screen"</strong>.</li>
-                        <li>Launch it like a native iOS app!</li>
-                    </ol>
-                </div>
-            </div>
-
-            <button onclick="closeDeployModal()" class="w-full py-2.5 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition">Got it!</button>
-        </div>
-    </div>
-
-    <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-800 text-white px-4 py-3 rounded-xl border border-emerald-500/40 shadow-2xl flex items-center space-x-3 transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
-        <span id="toastMessage" class="text-sm font-medium">Recorded!</span>
-    </div>
-
-    <script>
-        const TOTAL_UNITS = 10;
-        const INITIAL_COST = 170;
-        const TARGET_REVENUE = 300;
-
-        let currentUser = localStorage.getItem('ultra_chargers_user') || 'Tyson';
-
-        // Preloaded initial state: Tyson sold charger #1 for $30
-        let appState = {
-            sales: [
-                {
-                    id: 1,
-                    user: 'Tyson',
-                    price: 30,
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' })
-                }
-            ]
-        };
-
-        const localSaved = localStorage.getItem('ultra_chargers_state');
-        if (localSaved) {
-            try {
-                const parsed = JSON.parse(localSaved);
-                if (parsed && Array.isArray(parsed.sales)) {
-                    appState = parsed;
-                }
-            } catch(e) {}
-        }
-
-        window.appState = appState;
-        let financialChartInstance = null;
-        let friendsChartInstance = null;
-
-        window.addEventListener('DOMContentLoaded', () => {
-            updateUserUI();
-            initCharts();
-            updateDashboard();
-
-            if (!localStorage.getItem('ultra_chargers_user')) {
-                openSignInModal();
-            } else {
-                closeSignInModal();
-            }
-        });
-
-        function openSignInModal() {
-            document.getElementById('signInModal').classList.remove('hidden');
-        }
-
-        function closeSignInModal() {
-            document.getElementById('signInModal').classList.add('hidden');
-        }
-
-        function selectUser(userName) {
-            currentUser = userName;
-            localStorage.setItem('ultra_chargers_user', userName);
-            updateUserUI();
-            closeSignInModal();
-            showToast(`Signed in as ${userName}`);
-        }
-
-        function updateUserUI() {
-            document.getElementById('activeUserName').innerText = currentUser;
-            document.getElementById('currentSellerLabel').innerText = currentUser;
-        }
-
-        function logSale(price) {
-            if (appState.sales.length >= TOTAL_UNITS) {
-                showToast("All 10 chargers have been sold!", "warning");
-                return;
-            }
-
-            const newSale = {
-                id: Date.now(),
-                user: currentUser,
-                price: parseFloat(price),
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' })
-            };
-
-            appState.sales.push(newSale);
-            if (window.syncToFirestore) {
-                window.syncToFirestore();
-            } else {
-                localStorage.setItem('ultra_chargers_state', JSON.stringify(appState));
-                updateDashboard();
-            }
-            showToast(`Sale logged: $${price} by ${currentUser}`);
-        }
-
-        function undoSale(saleId) {
-            appState.sales = appState.sales.filter(s => s.id !== saleId);
-            if (window.syncToFirestore) {
-                window.syncToFirestore();
-            } else {
-                localStorage.setItem('ultra_chargers_state', JSON.stringify(appState));
-                updateDashboard();
-            }
-            showToast("Sale entry removed.", "info");
-        }
-
-        function confirmResetData() {
-            const promptMsg = currentUser === 'Korbin' 
-                ? "Korbin, reset sales back to initial 1 sale by Tyson ($30)?" 
-                : "Reset all sales back to 1 sale by Tyson ($30)?";
-
-            if (!confirm(promptMsg)) return;
-
-            appState.sales = [
-                {
-                    id: Date.now(),
-                    user: 'Tyson',
-                    price: 30,
-                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date().toLocaleDateString([], { month: 'short', day: 'numeric' })
-                }
-            ];
-            
-            if (window.syncToFirestore) {
-                window.syncToFirestore();
-            } else {
-                localStorage.setItem('ultra_chargers_state', JSON.stringify(appState));
-                updateDashboard();
-            }
-            showToast("Tracker reset to initial sale.", "info");
-        }
-
-        function openCustomSaleModal() {
-            document.getElementById('customPriceModal').classList.remove('hidden');
-        }
-
-        function closeCustomSaleModal() {
-            document.getElementById('customPriceModal').classList.add('hidden');
-        }
-
-        function submitCustomSale() {
-            const val = parseFloat(document.getElementById('customPriceInput').value);
-            if (val > 0) {
-                logSale(val);
-                closeCustomSaleModal();
-            }
-        }
-
-        function openDeployModal() {
-            document.getElementById('deployModal').classList.remove('hidden');
-        }
-
-        function closeDeployModal() {
-            document.getElementById('deployModal').classList.add('hidden');
-        }
-
-        function updateDashboard() {
-            const soldCount = appState.sales.length;
-            const remainingCount = TOTAL_UNITS - soldCount;
-            const totalRevenue = appState.sales.reduce((sum, s) => sum + s.price, 0);
-            const netProfit = totalRevenue - INITIAL_COST;
-            const breakEvenDiff = INITIAL_COST - totalRevenue;
-
-            document.getElementById('unitsProgressText').innerText = `${soldCount} / ${TOTAL_UNITS}`;
-            document.getElementById('unitsProgressBar').style.width = `${(soldCount / TOTAL_UNITS) * 100}%`;
-
-            document.getElementById('statRevenue').innerText = `$${totalRevenue}`;
-
-            const profitElem = document.getElementById('statProfit');
-            if (netProfit >= 0) {
-                profitElem.innerText = `+$${netProfit}`;
-                profitElem.className = "text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight";
-            } else {
-                profitElem.innerText = `-$${Math.abs(netProfit)}`;
-                profitElem.className = "text-2xl sm:text-3xl font-black text-rose-400 tracking-tight";
-            }
-
-            document.getElementById('statRemaining').innerHTML = `${remainingCount} <span class="text-sm font-medium text-slate-400">/ ${TOTAL_UNITS}</span>`;
-            document.getElementById('statSoldText').innerText = `${soldCount} sold so far`;
-
-            const breakEvenElem = document.getElementById('statBreakEven');
-            const breakEvenSub = document.getElementById('statBreakEvenSub');
-            if (breakEvenDiff > 0) {
-                breakEvenElem.innerText = `$${breakEvenDiff} Left`;
-                breakEvenElem.className = "text-xl sm:text-2xl font-black text-amber-400 tracking-tight";
-                breakEvenSub.innerText = "Needed to break even on $170";
-            } else {
-                breakEvenElem.innerText = "COST COVERED! 🎉";
-                breakEvenElem.className = "text-xl sm:text-2xl font-black text-emerald-400 tracking-tight";
-                breakEvenSub.innerText = `$${Math.abs(breakEvenDiff)} pure net profit!`;
-            }
-
-            renderActivityLog();
-            renderSquadBreakdown();
-            updateCharts();
-        }
-
-        function renderActivityLog() {
-            const container = document.getElementById('activityLogContainer');
-            const countBadge = document.getElementById('logCountBadge');
-            countBadge.innerText = `${appState.sales.length} Event${appState.sales.length === 1 ? '' : 's'}`;
-
-            if (appState.sales.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-slate-500">
-                        <i class="fa-solid fa-receipt text-3xl mb-2 opacity-40"></i>
-                        <p class="text-sm">No sales logged yet.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const reversedSales = [...appState.sales].reverse();
-            container.innerHTML = reversedSales.map(sale => {
-                const isKorbin = sale.user === 'Korbin';
-                const roleTag = isKorbin ? 'Overseer' : 'Seller';
-                return `
-                    <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between hover:border-slate-700 transition">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm">
-                                $${sale.price}
-                            </div>
-                            <div>
-                                <div class="text-sm font-bold text-white flex items-center gap-2">
-                                    <span>${escapeHtml(sale.user || 'Team')}</span>
-                                    <span class="text-[10px] font-semibold text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">${roleTag}</span>
-                                </div>
-                                <div class="text-xs text-slate-400">${sale.timestamp}</div>
-                            </div>
-                        </div>
-                        <button onclick="undoSale(${sale.id})" class="text-slate-500 hover:text-rose-400 p-2 transition" title="Undo this sale">
-                            <i class="fa-solid fa-trash-can"></i>
-                        </button>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function renderSquadBreakdown() {
-            const container = document.getElementById('friendStatsList');
-            const team = ['Kolton', 'Tyson', 'Korbin'];
-
-            const stats = team.map(name => {
-                const userSales = appState.sales.filter(s => s.user === name);
-                const count = userSales.length;
-                const revenue = userSales.reduce((acc, curr) => acc + curr.price, 0);
-                return { name, count, revenue };
-            });
-
-            const totalRevenue = appState.sales.reduce((acc, curr) => acc + curr.price, 0);
-
-            container.innerHTML = stats.map((item, idx) => {
-                const pct = totalRevenue > 0 ? Math.round((item.revenue / totalRevenue) * 100) : 0;
-                const colors = ['border-emerald-500/30', 'border-cyan-500/30', 'border-purple-500/30'];
-                const badgeColors = ['bg-emerald-500/10 text-emerald-400', 'bg-cyan-500/10 text-cyan-400', 'bg-purple-500/10 text-purple-400'];
-
-                return `
-                    <div class="p-3.5 rounded-xl bg-slate-900/60 border ${colors[idx % colors.length]} space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-white text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-user-circle text-xs text-slate-400"></i>
-                                ${escapeHtml(item.name)} ${item.name === 'Korbin' ? '<span class="text-[10px] text-purple-400 font-normal">(Overseer)</span>' : ''}
-                            </span>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded ${badgeColors[idx % badgeColors.length]}">
-                                ${item.count} Sold
-                            </span>
-                        </div>
-                        <div class="flex justify-between items-end text-xs">
-                            <span class="text-slate-400">Revenue:</span>
-                            <span class="text-base font-extrabold text-white">$${item.revenue}</span>
-                        </div>
-                        <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden">
-                            <div class="bg-gradient-to-r from-emerald-400 to-cyan-400 h-full" style="width: ${pct}%"></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function initCharts() {
-            const ctxFin = document.getElementById('financialChart').getContext('2d');
-            financialChartInstance = new Chart(ctxFin, {
-                type: 'bar',
-                data: getFinancialChartData(),
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { size: 11 } } },
-                        y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8', font: { size: 11 }, callback: v => '$' + v }, suggestedMax: 320 }
-                    }
-                }
-            });
-
-            const ctxFriends = document.getElementById('friendsChart').getContext('2d');
-            friendsChartInstance = new Chart(ctxFriends, {
-                type: 'doughnut',
-                data: getFriendsChartData(),
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#cbd5e1', font: { size: 12 } } }
-                    },
-                    cutout: '65%'
-                }
-            });
-        }
-
-        function updateCharts() {
-            if (financialChartInstance) {
-                financialChartInstance.data = getFinancialChartData();
-                financialChartInstance.update();
-            }
-            if (friendsChartInstance) {
-                friendsChartInstance.data = getFriendsChartData();
-                friendsChartInstance.update();
-            }
-        }
-
-        function getFinancialChartData() {
-            let cumulativeRev = 0;
-            const revData = [0];
-            const labels = ['Start'];
-
-            appState.sales.forEach((s, idx) => {
-                cumulativeRev += s.price;
-                revData.push(cumulativeRev);
-                labels.push(`Sale ${idx + 1}`);
-            });
-
-            return {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Revenue ($)',
-                        data: revData,
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                        borderColor: '#10b981',
-                        borderWidth: 2,
-                        borderRadius: 6,
-                        type: 'bar'
-                    },
-                    {
-                        label: 'Cost Basis ($170)',
-                        data: Array(labels.length).fill(INITIAL_COST),
-                        borderColor: '#f43f5e',
-                        borderWidth: 2,
-                        borderDash: [5, 5],
-                        type: 'line',
-                        pointRadius: 0
-                    },
-                    {
-                        label: 'Target ($300)',
-                        data: Array(labels.length).fill(TARGET_REVENUE),
-                        borderColor: '#fbbf24',
-                        borderWidth: 2,
-                        borderDash: [3, 3],
-                        type: 'line',
-                        pointRadius: 0
-                    }
-                ]
-            };
-        }
-
-        function getFriendsChartData() {
-            const team = ['Kolton', 'Tyson', 'Korbin'];
-            const totals = team.map(name => {
-                return appState.sales
-                    .filter(s => s.user === name)
-                    .reduce((sum, s) => sum + s.price, 0);
-            });
-
-            return {
-                labels: team,
-                datasets: [{
-                    data: totals,
-                    backgroundColor: ['#10b981', '#06b6d4', '#8b5cf6'],
-                    borderWidth: 2,
-                    borderColor: '#0f172a'
-                }]
-            };
-        }
-
-        function showToast(msg, type = "success") {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            const toastIcon = document.getElementById('toastIcon');
-
-            toastMessage.innerText = msg;
-            if (type === "warning") {
-                toastIcon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-lg";
-            } else if (type === "info") {
-                toastIcon.className = "fa-solid fa-circle-info text-cyan-400 text-lg";
-            } else {
-                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
-            }
-
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            toast.classList.add('translate-y-0', 'opacity-100');
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 2500);
-        }
-
-        function escapeHtml(str) {
-            return String(str).replace(/[&<>"']/g, m => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            })[m]);
-        }
-    </script>
+      `;
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+  </script>
 </body>
 </html>
