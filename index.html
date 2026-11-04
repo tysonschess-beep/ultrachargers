@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Ultra Chargers" />
-  <title>Ultra Chargers - Profit Tracker</title>
+  <title>Ultra Chargers - Profit & Vault Tracker</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -32,14 +32,22 @@
       background: rgba(51, 65, 85, 0.8);
       border-radius: 4px;
     }
+    .exodus-card {
+      background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+    }
+    .exodus-glow {
+      box-shadow: 0 0 25px -5px rgba(168, 85, 247, 0.25);
+    }
   </style>
 </head>
 <body class="h-full text-slate-100 flex flex-col justify-between overflow-x-hidden">
 
-  <!-- Header -->
+  <!-- Header & Navigation -->
   <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
     <div class="flex items-center space-x-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-xl shadow-lg shadow-cyan-500/20">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-500 to-purple-600 flex items-center justify-center font-black text-xl shadow-lg shadow-purple-500/20">
         ⚡
       </div>
       <div>
@@ -48,19 +56,29 @@
       </div>
     </div>
     
+    <!-- View Switcher Tabs -->
+    <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+      <button type="button" onclick="switchView('sales')" id="tabSales" class="px-3 py-1 rounded-lg text-xs font-bold transition-all bg-purple-600 text-white shadow-md">
+        📊 Sales
+      </button>
+      <button type="button" onclick="switchView('bank')" id="tabBank" class="px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white">
+        💼 Vault Bank
+      </button>
+    </div>
+
     <div class="flex items-center space-x-2">
       <button type="button" onclick="openModal('userModal')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold transition-all">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="syncIndicator"></span>
-        <span id="activeUserLabel">Select Role</span>
+        <span id="activeUserLabel">Role</span>
       </button>
-      <button type="button" onclick="openModal('guideModal')" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-xs font-bold border border-slate-700" title="Deployment & App Info">
+      <button type="button" onclick="openModal('guideModal')" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-xs font-bold border border-slate-700">
         📱
       </button>
     </div>
   </header>
 
-  <!-- Main Content Area -->
-  <main class="flex-1 max-w-4xl w-full mx-auto p-4 space-y-6 pb-24">
+  <!-- ================= VIEW 1: SALES TRACKER ================= -->
+  <main id="salesView" class="flex-1 max-w-4xl w-full mx-auto p-4 space-y-6 pb-24">
 
     <!-- Top KPI Cards Grid -->
     <section class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -102,7 +120,7 @@
           <h2 class="text-lg font-bold text-white flex items-center gap-2">
             <span>⚡ Log New Charger Sale</span>
           </h2>
-          <p class="text-xs text-slate-300 mt-0.5">Click a quick button or enter custom amount when a customer buys.</p>
+          <p class="text-xs text-slate-300 mt-0.5">Click a button when a charger sells.</p>
         </div>
         <span class="text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-full font-semibold" id="sellerBadge">Logged as: Kolton</span>
       </div>
@@ -130,7 +148,7 @@
       <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
         <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
           <span>Financial Trajectory</span>
-          <span class="text-xs text-slate-500 font-normal">Initial Batch: $170 Cost</span>
+          <span class="text-xs text-slate-500 font-normal">Initial Cost: $170</span>
         </h3>
         <div class="h-56 relative">
           <canvas id="profitChart"></canvas>
@@ -160,6 +178,108 @@
         <!-- Entries will render here -->
       </div>
     </section>
+  </main>
+
+  <!-- ================= VIEW 2: EXODUS WALLET BANK ================= -->
+  <main id="bankView" class="flex-1 max-w-4xl w-full mx-auto p-4 space-y-6 pb-24 hidden">
+    
+    <!-- Hero Exodus Portfolio Balance Card -->
+    <section class="exodus-card exodus-glow rounded-3xl p-6 relative overflow-hidden text-center">
+      <div class="absolute -right-10 -top-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <span class="text-xs font-semibold tracking-widest text-purple-300 uppercase bg-purple-900/40 border border-purple-500/30 px-3 py-1 rounded-full inline-block mb-3">
+        💎 Total Cash Vault
+      </span>
+      
+      <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight" id="bankTotalCash">$30.00</h2>
+      <p class="text-xs text-slate-400 mt-2 font-medium" id="bankTargetRemaining">Need <span class="text-cyan-400 font-bold">$270.00 more</span> to reach $300 Goal</p>
+
+      <!-- Batch Target Progress Bar -->
+      <div class="mt-6 max-w-md mx-auto">
+        <div class="flex justify-between text-xs text-slate-400 font-semibold mb-1">
+          <span>Current Cash: <span class="text-white" id="bankCashSub">$30</span></span>
+          <span>Target Goal: <span class="text-purple-300">$300</span></span>
+        </div>
+        <div class="w-full bg-slate-900/80 rounded-full h-3 border border-purple-500/30 p-0.5 overflow-hidden">
+          <div id="bankProgressBar" class="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 h-full rounded-full transition-all duration-700" style="width: 10%"></div>
+        </div>
+        <p class="text-[11px] text-purple-300/80 mt-2 text-right" id="bankProgressPct">10.0% Reached</p>
+      </div>
+    </section>
+
+    <!-- Exodus Split Portfolio Assets Grid -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      <!-- Vault 1: Cost Payback Pool ($170 Total) -->
+      <div class="exodus-card p-5 rounded-2xl flex items-center justify-between">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <h3 class="text-sm font-bold text-slate-200">Cost Recovery Pool</h3>
+          </div>
+          <p class="text-xs text-slate-400">Pays back initial $170 batch cost</p>
+          <p class="text-2xl font-black text-amber-300 pt-1" id="vaultCostPaid">$30 / $170</p>
+        </div>
+        <div class="w-16 h-16 relative flex items-center justify-center">
+          <canvas id="vaultCostChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Vault 2: Net Profit Pool ($130 Goal) -->
+      <div class="exodus-card p-5 rounded-2xl flex items-center justify-between">
+        <div class="space-y-1">
+          <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
+            <h3 class="text-sm font-bold text-slate-200">Net Profit Vault</h3>
+          </div>
+          <p class="text-xs text-slate-400">Unlocks after $170 break-even</p>
+          <p class="text-2xl font-black text-emerald-400 pt-1" id="vaultProfitPool">$0.00</p>
+        </div>
+        <div class="w-16 h-16 relative flex items-center justify-center">
+          <canvas id="vaultProfitChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Exodus 3-Way Equal Split Breakdown -->
+    <section class="exodus-card rounded-2xl p-5 border border-purple-500/20">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <span>🤝 3-Way Squad Equal Payout Split</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">How total collected cash is divided between everyone.</p>
+        </div>
+        <span class="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-2.5 py-1 rounded-full font-bold">1/3 Each</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <!-- Kolton Card -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+          <div class="w-10 h-10 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto text-lg font-bold">K</div>
+          <p class="text-xs text-slate-400 font-semibold">Kolton's Share</p>
+          <p class="text-xl font-black text-cyan-400" id="splitKolton">$10.00</p>
+          <p class="text-[10px] text-slate-500" id="splitKoltonProfit">Profit: $0.00</p>
+        </div>
+
+        <!-- Tyson Card -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+          <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto text-lg font-bold">T</div>
+          <p class="text-xs text-slate-400 font-semibold">Tyson's Share</p>
+          <p class="text-xl font-black text-blue-400" id="splitTyson">$10.00</p>
+          <p class="text-[10px] text-slate-500" id="splitTysonProfit">Profit: $0.00</p>
+        </div>
+
+        <!-- Korbin Card -->
+        <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center space-y-1">
+          <div class="w-10 h-10 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto text-lg font-bold">K</div>
+          <p class="text-xs text-slate-400 font-semibold">Korbin's Share</p>
+          <p class="text-xl font-black text-purple-400" id="splitKorbin">$10.00</p>
+          <p class="text-[10px] text-slate-500" id="splitKorbinProfit">Profit: $0.00</p>
+        </div>
+      </div>
+    </section>
 
   </main>
 
@@ -167,7 +287,7 @@
   <div id="userModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl">
       <div class="text-center mb-5">
-        <div class="w-12 h-12 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto text-xl mb-2">👤</div>
+        <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto text-xl mb-2">👤</div>
         <h2 class="text-lg font-bold text-white">Who is using this device?</h2>
         <p class="text-xs text-slate-400 mt-1">Select your profile to attribute sales correctly.</p>
       </div>
@@ -209,11 +329,11 @@
     </div>
   </div>
 
-  <!-- iOS / App Info Modal -->
+  <!-- App Info Modal -->
   <div id="guideModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="font-bold text-base text-white">📱 iPhone App Installation</h3>
+        <h3 class="font-bold text-base text-white">📱 iPhone Web App Instructions</h3>
         <button type="button" onclick="closeModal('guideModal')" class="text-slate-400 hover:text-white text-sm">✕</button>
       </div>
       
@@ -224,14 +344,13 @@
             <li>Open this URL in <strong>Safari</strong> on iPhone.</li>
             <li>Tap the <strong>Share button</strong> (square with arrow up).</li>
             <li>Scroll down and tap <strong>"Add to Home Screen"</strong>.</li>
-            <li>Launch it like a native app directly from your home screen!</li>
           </ol>
         </div>
 
         <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700">
-          <p class="font-semibold text-emerald-400 mb-1">Live Database Connection:</p>
+          <p class="font-semibold text-purple-400 mb-1">Live Database Connection:</p>
           <p class="text-slate-400 leading-relaxed">
-            Connected to Firebase project <code class="text-cyan-300">ultra-chargers</code>. Real-time multi-device cloud synchronization is active.
+            Connected to Firebase project <code class="text-cyan-300">ultra-chargers</code>. Sales sync live across devices.
           </p>
         </div>
       </div>
@@ -240,7 +359,7 @@
     </div>
   </div>
 
-  <!-- Application Logic & Firestore Integration -->
+  <!-- Application Logic -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCr9oRKHXDchgFtXncCST1_hVretfy7KfE",
@@ -259,6 +378,7 @@
     const defaultState = {
       totalCost: 170,
       totalBatchQty: 10,
+      targetGoal: 300,
       sales: [
         {
           id: 'initial_sale_1',
@@ -271,8 +391,11 @@
 
     let appState = JSON.parse(localStorage.getItem('uc_state')) || defaultState;
 
+    // Chart instances
     let profitChartInstance = null;
     let sellerChartInstance = null;
+    let vaultCostChartInstance = null;
+    let vaultProfitChartInstance = null;
 
     window.addEventListener('DOMContentLoaded', () => {
       initFirebase();
@@ -290,7 +413,6 @@
         document.getElementById('syncStatusText').innerText = "Live Cloud Synced";
         document.getElementById('syncIndicator').className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
 
-        // Listen for live database updates
         db.collection("chargers_batch").doc("active_batch")
           .onSnapshot((doc) => {
             if (doc.exists) {
@@ -298,18 +420,36 @@
               localStorage.setItem('uc_state', JSON.stringify(appState));
               renderDashboard();
             } else {
-              // Seed initial batch document if missing
               db.collection("chargers_batch").doc("active_batch").set(defaultState);
             }
           }, (err) => {
             console.error("Firestore sync error:", err);
-            document.getElementById('syncStatusText').innerText = "Offline Cache Mode";
+            document.getElementById('syncStatusText').innerText = "Offline Mode";
             document.getElementById('syncIndicator').className = "w-2.5 h-2.5 rounded-full bg-amber-400";
           });
       } catch (err) {
-        console.warn("Firebase initialization failed:", err);
-        document.getElementById('syncStatusText').innerText = "Local Mode Only";
+        console.warn("Firebase init warning:", err);
+        document.getElementById('syncStatusText').innerText = "Local Mode";
         document.getElementById('syncIndicator').className = "w-2.5 h-2.5 rounded-full bg-red-400";
+      }
+    }
+
+    function switchView(view) {
+      const salesView = document.getElementById('salesView');
+      const bankView = document.getElementById('bankView');
+      const tabSales = document.getElementById('tabSales');
+      const tabBank = document.getElementById('tabBank');
+
+      if (view === 'sales') {
+        salesView.classList.remove('hidden');
+        bankView.classList.add('hidden');
+        tabSales.className = "px-3 py-1 rounded-lg text-xs font-bold transition-all bg-purple-600 text-white shadow-md";
+        tabBank.className = "px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
+      } else {
+        salesView.classList.add('hidden');
+        bankView.classList.remove('hidden');
+        tabBank.className = "px-3 py-1 rounded-lg text-xs font-bold transition-all bg-purple-600 text-white shadow-md";
+        tabSales.className = "px-3 py-1 rounded-lg text-xs font-bold transition-all text-slate-400 hover:text-white";
       }
     }
 
@@ -332,15 +472,12 @@
       if (db) {
         db.collection("chargers_batch").doc("active_batch").set(appState)
           .then(() => {
-            document.getElementById('syncStatusText').innerText = "Synced to Cloud ⚡";
+            document.getElementById('syncStatusText').innerText = "Synced ⚡";
             setTimeout(() => {
               document.getElementById('syncStatusText').innerText = "Live Cloud Synced";
             }, 2000);
           })
-          .catch((err) => {
-            console.error("Cloud push failed:", err);
-            alert("Warning: Sale saved on your phone, but cloud sync failed. Check your Firebase rules.");
-          });
+          .catch((err) => console.error("Cloud push failed:", err));
       }
     }
 
@@ -385,7 +522,10 @@
       const unitsSold = sales.length;
       const avgPrice = unitsSold > 0 ? (totalRevenue / unitsSold).toFixed(1) : 0;
       const remainingCostToBreakEven = Math.max(0, appState.totalCost - totalRevenue);
+      const targetGoal = appState.targetGoal || 300;
+      const remainingToTarget = Math.max(0, targetGoal - totalRevenue);
 
+      // --- 1. Render Sales View Stats ---
       document.getElementById('statRevenue').innerText = `$${totalRevenue}`;
       document.getElementById('statAvgPrice').innerText = `Avg: $${avgPrice}/unit`;
 
@@ -419,6 +559,36 @@
 
       renderActivityLog(sales);
       renderCharts(sales);
+
+      // --- 2. Render Exodus Bank View Stats ---
+      document.getElementById('bankTotalCash').innerText = `$${totalRevenue.toFixed(2)}`;
+      document.getElementById('bankCashSub').innerText = `$${totalRevenue}`;
+      document.getElementById('bankTargetRemaining').innerHTML = `Need <span class="text-cyan-400 font-bold">$${remainingToTarget.toFixed(2)} more</span> to reach $300 Goal`;
+
+      const targetPct = Math.min(100, (totalRevenue / targetGoal) * 100).toFixed(1);
+      document.getElementById('bankProgressBar').style.width = `${targetPct}%`;
+      document.getElementById('bankProgressPct').innerText = `${targetPct}% Reached`;
+
+      // Cost Vault vs Profit Vault
+      const costRecovered = Math.min(appState.totalCost, totalRevenue);
+      const pureProfitVault = Math.max(0, totalRevenue - appState.totalCost);
+
+      document.getElementById('vaultCostPaid').innerText = `$${costRecovered} / $${appState.totalCost}`;
+      document.getElementById('vaultProfitPool').innerText = `$${pureProfitVault.toFixed(2)}`;
+
+      // 3-Way Squad Equal Payout Split
+      const sharePerPerson = (totalRevenue / 3).toFixed(2);
+      const profitPerPerson = (pureProfitVault / 3).toFixed(2);
+
+      document.getElementById('splitKolton').innerText = `$${sharePerPerson}`;
+      document.getElementById('splitTyson').innerText = `$${sharePerPerson}`;
+      document.getElementById('splitKorbin').innerText = `$${sharePerPerson}`;
+
+      document.getElementById('splitKoltonProfit').innerText = `Profit: $${profitPerPerson}`;
+      document.getElementById('splitTysonProfit').innerText = `Profit: $${profitPerPerson}`;
+      document.getElementById('splitKorbinProfit').innerText = `Profit: $${profitPerPerson}`;
+
+      renderVaultCharts(costRecovered, appState.totalCost, pureProfitVault);
     }
 
     function renderActivityLog(sales) {
@@ -543,6 +713,54 @@
           <span class="font-bold text-slate-400">${korbinSales.length} sold (${korbinSales.length ? '$' + korbinTotal : 'Overseeing'})</span>
         </div>
       `;
+    }
+
+    function renderVaultCharts(costPaid, totalCost, profitVault) {
+      // 1. Mini Cost Donut Chart
+      const ctxCost = document.getElementById('vaultCostChart').getContext('2d');
+      if (vaultCostChartInstance) vaultCostChartInstance.destroy();
+
+      const costRemaining = Math.max(0, totalCost - costPaid);
+      vaultCostChartInstance = new Chart(ctxCost, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [costPaid, costRemaining],
+            backgroundColor: ['#fbbf24', 'rgba(51, 65, 85, 0.4)'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '75%'
+        }
+      });
+
+      // 2. Mini Profit Donut Chart
+      const ctxProfit = document.getElementById('vaultProfitChart').getContext('2d');
+      if (vaultProfitChartInstance) vaultProfitChartInstance.destroy();
+
+      const profitTarget = 130; // Max profit goal
+      const profitRemaining = Math.max(0, profitTarget - profitVault);
+
+      vaultProfitChartInstance = new Chart(ctxProfit, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [profitVault || 0.01, profitRemaining],
+            backgroundColor: ['#34d399', 'rgba(51, 65, 85, 0.4)'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '75%'
+        }
+      });
     }
 
     function openModal(id) {
