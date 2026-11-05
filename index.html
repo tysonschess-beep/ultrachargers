@@ -67,6 +67,10 @@
     </div>
 
     <div class="flex items-center space-x-2">
+      <!-- Batch Management Button -->
+      <button type="button" onclick="openModal('batchModal')" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-cyan-400 text-xs font-bold border border-slate-700" title="Manage Batches">
+        📦
+      </button>
       <button type="button" onclick="openModal('userModal')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold transition-all">
         <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="syncIndicator"></span>
         <span id="activeUserLabel">Role</span>
@@ -109,7 +113,7 @@
         <div class="absolute -right-3 -bottom-3 text-5xl opacity-10">🎯</div>
         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Break-Even Status</p>
         <p class="text-xl font-extrabold mt-1" id="statBreakEven">$170 Left</p>
-        <span class="inline-block mt-2 text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-medium" id="statBreakEvenSub">Need ~5-6 more sales</span>
+        <span class="inline-block mt-2 text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-medium" id="statBreakEvenSub">Need ~6 more sales</span>
       </div>
     </section>
 
@@ -148,7 +152,7 @@
       <div class="md:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-4">
         <h3 class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
           <span>Financial Trajectory</span>
-          <span class="text-xs text-slate-500 font-normal">Initial Cost: $170</span>
+          <span class="text-xs text-slate-500 font-normal" id="chartCostLabel">Initial Cost: $170</span>
         </h3>
         <div class="h-56 relative">
           <canvas id="profitChart"></canvas>
@@ -188,52 +192,52 @@
       <div class="absolute -right-10 -top-10 w-40 h-40 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
       <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-cyan-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
-      <span class="text-xs font-semibold tracking-widest text-purple-300 uppercase bg-purple-900/40 border border-purple-500/30 px-3 py-1 rounded-full inline-block mb-3">
-        💎 Total Cash Vault
+      <span class="text-xs font-semibold tracking-widest text-purple-300 uppercase bg-purple-900/40 border border-purple-500/30 px-3 py-1 rounded-full inline-block mb-3" id="batchTitleBadge">
+        💎 Batch #1 Total Cash Vault
       </span>
       
-      <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight" id="bankTotalCash">$30.00</h2>
+      <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight" id="bankTotalCash">$0.00</h2>
       <p class="text-xs text-slate-400 mt-2 font-medium" id="bankTargetRemaining">Need <span class="text-cyan-400 font-bold">$270.00 more</span> to reach $300 Goal</p>
 
       <!-- Batch Target Progress Bar -->
       <div class="mt-6 max-w-md mx-auto">
         <div class="flex justify-between text-xs text-slate-400 font-semibold mb-1">
-          <span>Current Cash: <span class="text-white" id="bankCashSub">$30</span></span>
-          <span>Target Goal: <span class="text-purple-300">$300</span></span>
+          <span>Current Cash: <span class="text-white" id="bankCashSub">$0</span></span>
+          <span>Target Goal: <span class="text-purple-300" id="bankGoalSub">$300</span></span>
         </div>
         <div class="w-full bg-slate-900/80 rounded-full h-3 border border-purple-500/30 p-0.5 overflow-hidden">
-          <div id="bankProgressBar" class="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 h-full rounded-full transition-all duration-700" style="width: 10%"></div>
+          <div id="bankProgressBar" class="bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 h-full rounded-full transition-all duration-700" style="width: 0%"></div>
         </div>
-        <p class="text-[11px] text-purple-300/80 mt-2 text-right" id="bankProgressPct">10.0% Reached</p>
+        <p class="text-[11px] text-purple-300/80 mt-2 text-right" id="bankProgressPct">0.0% Reached</p>
       </div>
     </section>
 
     <!-- Exodus Split Portfolio Assets Grid -->
     <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
       
-      <!-- Vault 1: Cost Payback Pool ($170 Total) -->
+      <!-- Vault 1: Cost Payback Pool -->
       <div class="exodus-card p-5 rounded-2xl flex items-center justify-between">
         <div class="space-y-1">
           <div class="flex items-center space-x-2">
             <div class="w-3 h-3 rounded-full bg-amber-400"></div>
             <h3 class="text-sm font-bold text-slate-200">Cost Recovery Pool</h3>
           </div>
-          <p class="text-xs text-slate-400">Pays back initial $170 batch cost</p>
-          <p class="text-2xl font-black text-amber-300 pt-1" id="vaultCostPaid">$30 / $170</p>
+          <p class="text-xs text-slate-400" id="costPoolDesc">Pays back initial $170 batch cost</p>
+          <p class="text-2xl font-black text-amber-300 pt-1" id="vaultCostPaid">$0 / $170</p>
         </div>
         <div class="w-16 h-16 relative flex items-center justify-center">
           <canvas id="vaultCostChart"></canvas>
         </div>
       </div>
 
-      <!-- Vault 2: Net Profit Pool ($130 Goal) -->
+      <!-- Vault 2: Net Profit Pool -->
       <div class="exodus-card p-5 rounded-2xl flex items-center justify-between">
         <div class="space-y-1">
           <div class="flex items-center space-x-2">
             <div class="w-3 h-3 rounded-full bg-emerald-400"></div>
             <h3 class="text-sm font-bold text-slate-200">Net Profit Vault</h3>
           </div>
-          <p class="text-xs text-slate-400">Unlocks after $170 break-even</p>
+          <p class="text-xs text-slate-400">Unlocks after break-even</p>
           <p class="text-2xl font-black text-emerald-400 pt-1" id="vaultProfitPool">$0.00</p>
         </div>
         <div class="w-16 h-16 relative flex items-center justify-center">
@@ -259,7 +263,7 @@
         <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center space-y-1">
           <div class="w-10 h-10 bg-cyan-500/20 text-cyan-400 rounded-full flex items-center justify-center mx-auto text-lg font-bold">K</div>
           <p class="text-xs text-slate-400 font-semibold">Kolton's Share</p>
-          <p class="text-xl font-black text-cyan-400" id="splitKolton">$10.00</p>
+          <p class="text-xl font-black text-cyan-400" id="splitKolton">$0.00</p>
           <p class="text-[10px] text-slate-500" id="splitKoltonProfit">Profit: $0.00</p>
         </div>
 
@@ -267,7 +271,7 @@
         <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center space-y-1">
           <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto text-lg font-bold">T</div>
           <p class="text-xs text-slate-400 font-semibold">Tyson's Share</p>
-          <p class="text-xl font-black text-blue-400" id="splitTyson">$10.00</p>
+          <p class="text-xl font-black text-blue-400" id="splitTyson">$0.00</p>
           <p class="text-[10px] text-slate-500" id="splitTysonProfit">Profit: $0.00</p>
         </div>
 
@@ -275,13 +279,48 @@
         <div class="bg-slate-900/80 border border-slate-800 p-4 rounded-xl text-center space-y-1">
           <div class="w-10 h-10 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center mx-auto text-lg font-bold">K</div>
           <p class="text-xs text-slate-400 font-semibold">Korbin's Share</p>
-          <p class="text-xl font-black text-purple-400" id="splitKorbin">$10.00</p>
+          <p class="text-xl font-black text-purple-400" id="splitKorbin">$0.00</p>
           <p class="text-[10px] text-slate-500" id="splitKorbinProfit">Profit: $0.00</p>
         </div>
       </div>
     </section>
 
   </main>
+
+  <!-- Batch Management Modal -->
+  <div id="batchModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto custom-scrollbar">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-bold text-base text-white">📦 Batch & Financial Settings</h3>
+        <button type="button" onclick="closeModal('batchModal')" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs text-slate-300">
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700 space-y-3">
+          <p class="font-semibold text-cyan-400">Current Batch Config:</p>
+          <div>
+            <label class="text-[11px] text-slate-400">Batch Cost ($)</label>
+            <input type="number" id="inputBatchCost" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm" value="170" />
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400">Target Goal ($)</label>
+            <input type="number" id="inputBatchGoal" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm" value="300" />
+          </div>
+          <div>
+            <label class="text-[11px] text-slate-400">Total Units in Batch</label>
+            <input type="number" id="inputBatchQty" class="w-full mt-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm" value="10" />
+          </div>
+          <button type="button" onclick="saveBatchSettings()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 rounded-lg transition-all">Save Settings</button>
+        </div>
+
+        <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700 space-y-2 text-center">
+          <p class="font-semibold text-purple-400">Finished this 10-pack?</p>
+          <p class="text-slate-400">Start a fresh batch to reset sales counters and track the next round automatically.</p>
+          <button type="button" onclick="startNewBatch()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-2.5 rounded-xl transition-all shadow-lg">🚀 Start New 10-Pack Batch</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Sign In Modal -->
   <div id="userModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
@@ -376,6 +415,7 @@
     let currentUser = localStorage.getItem('uc_user') || 'Kolton';
 
     const defaultState = {
+      batchNumber: 1,
       totalCost: 170,
       totalBatchQty: 10,
       targetGoal: 300,
@@ -485,8 +525,8 @@
       const numPrice = Number(price);
       if (isNaN(numPrice) || numPrice <= 0) return;
 
-      if (appState.sales.length >= appState.totalBatchQty) {
-        alert("All 10 chargers in this batch have already been logged as sold!");
+      if (appState.sales.length >= (appState.totalBatchQty || 10)) {
+        alert("All units in this batch have already been logged as sold! Start a new batch in the 📦 menu.");
         return;
       }
 
@@ -515,19 +555,49 @@
       syncState();
     }
 
+    function saveBatchSettings() {
+      const cost = parseFloat(document.getElementById('inputBatchCost').value);
+      const goal = parseFloat(document.getElementById('inputBatchGoal').value);
+      const qty = parseInt(document.getElementById('inputBatchQty').value);
+
+      if (cost > 0) appState.totalCost = cost;
+      if (goal > 0) appState.targetGoal = goal;
+      if (qty > 0) appState.totalBatchQty = qty;
+
+      syncState();
+      closeModal('batchModal');
+    }
+
+    function startNewBatch() {
+      if (confirm("Are you sure you want to start a fresh batch? This will archive current sales and reset the units sold counter.")) {
+        appState.batchNumber = (appState.batchNumber || 1) + 1;
+        appState.sales = [];
+        syncState();
+        closeModal('batchModal');
+      }
+    }
+
     function renderDashboard() {
       const sales = appState.sales || [];
       const totalRevenue = sales.reduce((acc, s) => acc + s.price, 0);
       const netProfit = totalRevenue - appState.totalCost;
       const unitsSold = sales.length;
+      const batchQty = appState.totalBatchQty || 10;
       const avgPrice = unitsSold > 0 ? (totalRevenue / unitsSold).toFixed(1) : 0;
       const remainingCostToBreakEven = Math.max(0, appState.totalCost - totalRevenue);
       const targetGoal = appState.targetGoal || 300;
       const remainingToTarget = Math.max(0, targetGoal - totalRevenue);
 
+      // Populate input settings fields
+      document.getElementById('inputBatchCost').value = appState.totalCost || 170;
+      document.getElementById('inputBatchGoal').value = appState.targetGoal || 300;
+      document.getElementById('inputBatchQty').value = batchQty;
+
       // --- 1. Render Sales View Stats ---
       document.getElementById('statRevenue').innerText = `$${totalRevenue}`;
       document.getElementById('statAvgPrice').innerText = `Avg: $${avgPrice}/unit`;
+      document.getElementById('chartCostLabel').innerText = `Initial Cost: $${appState.totalCost}`;
+      document.getElementById('costPoolDesc').innerText = `Pays back initial $${appState.totalCost} batch cost`;
 
       const profitEl = document.getElementById('statNetProfit');
       if (netProfit >= 0) {
@@ -538,8 +608,8 @@
         profitEl.className = "text-2xl font-extrabold text-amber-400 mt-1";
       }
 
-      document.getElementById('statUnitsSold').innerText = `${unitsSold} / ${appState.totalBatchQty}`;
-      const pct = (unitsSold / appState.totalBatchQty) * 100;
+      document.getElementById('statUnitsSold').innerText = `${unitsSold} / ${batchQty}`;
+      const pct = Math.min(100, (unitsSold / batchQty) * 100);
       document.getElementById('statProgressBar').style.width = `${pct}%`;
 
       const breakEvenEl = document.getElementById('statBreakEven');
@@ -561,9 +631,12 @@
       renderCharts(sales);
 
       // --- 2. Render Exodus Bank View Stats ---
+      const batchNum = appState.batchNumber || 1;
+      document.getElementById('batchTitleBadge').innerText = `💎 Batch #${batchNum} Total Cash Vault`;
       document.getElementById('bankTotalCash').innerText = `$${totalRevenue.toFixed(2)}`;
       document.getElementById('bankCashSub').innerText = `$${totalRevenue}`;
-      document.getElementById('bankTargetRemaining').innerHTML = `Need <span class="text-cyan-400 font-bold">$${remainingToTarget.toFixed(2)} more</span> to reach $300 Goal`;
+      document.getElementById('bankGoalSub').innerText = `$${targetGoal}`;
+      document.getElementById('bankTargetRemaining').innerHTML = `Need <span class="text-cyan-400 font-bold">$${remainingToTarget.toFixed(2)} more</span> to reach $${targetGoal} Goal`;
 
       const targetPct = Math.min(100, (totalRevenue / targetGoal) * 100).toFixed(1);
       document.getElementById('bankProgressBar').style.width = `${targetPct}%`;
@@ -627,7 +700,7 @@
     function renderCharts(sales) {
       const chronologicalSales = [...sales].reverse();
       let cumulative = -appState.totalCost;
-      const lineLabels = ['Start ($170 Cost)', ...chronologicalSales.map((_, idx) => `Sale #${idx + 1}`)];
+      const lineLabels = [`Start ($${appState.totalCost} Cost)`, ...chronologicalSales.map((_, idx) => `Sale #${idx + 1}`)];
       const lineData = [-appState.totalCost];
 
       chronologicalSales.forEach(s => {
@@ -716,7 +789,6 @@
     }
 
     function renderVaultCharts(costPaid, totalCost, profitVault) {
-      // 1. Mini Cost Donut Chart
       const ctxCost = document.getElementById('vaultCostChart').getContext('2d');
       if (vaultCostChartInstance) vaultCostChartInstance.destroy();
 
@@ -738,11 +810,10 @@
         }
       });
 
-      // 2. Mini Profit Donut Chart
       const ctxProfit = document.getElementById('vaultProfitChart').getContext('2d');
       if (vaultProfitChartInstance) vaultProfitChartInstance.destroy();
 
-      const profitTarget = 130; // Max profit goal
+      const profitTarget = Math.max(1, (appState.targetGoal || 300) - appState.totalCost);
       const profitRemaining = Math.max(0, profitTarget - profitVault);
 
       vaultProfitChartInstance = new Chart(ctxProfit, {
