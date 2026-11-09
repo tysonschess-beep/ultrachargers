@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Squad Tracker" />
-  <title>Squad Tracker</title>
+  <title>Ultra Squad Tracker</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
 
@@ -37,255 +37,259 @@
 
   <!-- Header -->
   <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center space-x-2">
-      <div class="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-black text-lg">
-        🔥
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-black text-xl shadow-lg shadow-cyan-500/20">
+        ⚡
       </div>
       <div>
-        <h1 class="font-bold text-sm leading-none text-white">Squad Tracker</h1>
-        <p class="text-[10px] text-slate-400 mt-0.5" id="syncStatusText">Connecting Cloud...</p>
+        <h1 class="font-bold text-base leading-none text-white">Squad Tracker</h1>
+        <p class="text-xs text-slate-400 mt-0.5" id="syncStatusText">Connecting...</p>
       </div>
     </div>
     
     <div class="flex items-center space-x-2">
-      <button type="button" onclick="openModal('userModal')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-1 rounded-lg border border-slate-700 text-xs font-semibold transition-all">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" id="syncIndicator"></span>
-        <span id="activeUserLabel">Kolton</span>
+      <button type="button" onclick="openModal('userModal')" class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-700 text-xs font-semibold transition-all">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" id="syncIndicator"></span>
+        <span id="activeUserLabel">Role</span>
       </button>
-      <button type="button" onclick="openModal('guideModal')" class="p-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-xs font-bold border border-slate-700">
+      <button type="button" onclick="openModal('guideModal')" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 text-xs font-bold border border-slate-700" title="iPhone Instructions">
         📱
       </button>
     </div>
   </header>
 
-  <!-- ================= PAGE 1: 🛒 PRODUCT 1 ================= -->
-  <main id="page1" class="flex-1 max-w-lg w-full mx-auto p-4 space-y-4 pb-24">
-    <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-      <div class="flex items-center space-x-3">
-        <span class="text-3xl">🛒</span>
-        <div>
-          <h2 class="font-extrabold text-lg text-white">Product 1 (🛒)</h2>
-          <p class="text-xs text-slate-400">Default: $25 • Range: $20-$30</p>
+  <!-- Main Content Pages Container -->
+  <main class="flex-1 max-w-2xl w-full mx-auto p-4 space-y-6 pb-28">
+
+    <!-- ================= PAGE 1: PRODUCT 1 (🛒) ================= -->
+    <section id="page1" class="space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="text-3xl">🛒</div>
+          <div>
+            <h2 class="text-base font-bold text-white">Product 1 (Chargers)</h2>
+            <p class="text-xs text-slate-400">Worth ~$25 (Sell: $30 or $20)</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-slate-400">In Stock</p>
+          <p class="text-2xl font-black text-cyan-400" id="p1Stock">0</p>
         </div>
       </div>
-      <div class="text-right">
-        <p class="text-xs text-slate-400 font-semibold uppercase">Stock</p>
-        <p class="text-2xl font-black text-cyan-400" id="p1Stock">0</p>
-      </div>
-    </div>
 
-    <!-- Stock Controls -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-      <p class="text-xs font-bold text-slate-300">Add Stock:</p>
-      <div class="grid grid-cols-3 gap-2">
-        <button onclick="addStock(1, 1)" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-2 rounded-xl text-xs border border-slate-700 active:scale-95">+1 Stock</button>
-        <button onclick="addStock(1, 5)" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-2 rounded-xl text-xs border border-slate-700 active:scale-95">+5 Stock</button>
-        <button onclick="addStock(1, 10)" class="bg-slate-800 hover:bg-slate-700 text-cyan-400 font-bold py-2 rounded-xl text-xs border border-slate-700 active:scale-95">+10 Stock</button>
-      </div>
-    </div>
-
-    <!-- Log Sale -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-      <p class="text-xs font-bold text-slate-300">Log Sale (🛒):</p>
-      <div class="grid grid-cols-3 gap-2">
-        <button onclick="logSale(1, 30)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95">Sell $30</button>
-        <button onclick="logSale(1, 25)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95">Sell $25</button>
-        <button onclick="logSale(1, 20)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95">Sell $20</button>
-      </div>
-      <div class="flex gap-2 pt-1">
-        <input type="number" id="p1CustomPrice" placeholder="Custom $" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 text-xs text-white" min="1">
-        <button onclick="logCustomSale(1)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-xl text-xs border border-slate-700">Log</button>
-      </div>
-    </div>
-
-    <!-- Financial Stats & Audit Log -->
-    <div class="grid grid-cols-2 gap-3">
-      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl">
-        <p class="text-[10px] text-slate-400 font-bold uppercase">Total Revenue</p>
-        <p class="text-xl font-black text-emerald-400 mt-0.5" id="p1Revenue">$0</p>
-      </div>
-      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl">
-        <p class="text-[10px] text-slate-400 font-bold uppercase">Total Sold</p>
-        <p class="text-xl font-black text-white mt-0.5" id="p1SoldQty">0 units</p>
-      </div>
-    </div>
-
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-      <h3 class="text-xs font-bold text-slate-300">🛒 Audit Log</h3>
-      <div id="p1Log" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar text-xs"></div>
-    </div>
-  </main>
-
-  <!-- ================= PAGE 2: 🤓 PRODUCT 2 ================= -->
-  <main id="page2" class="flex-1 max-w-lg w-full mx-auto p-4 space-y-4 pb-24 hidden">
-    <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-      <div class="flex items-center space-x-3">
-        <span class="text-3xl">🤓</span>
-        <div>
-          <h2 class="font-extrabold text-lg text-white">Product 2 (🤓)</h2>
-          <p class="text-xs text-slate-400">Default: $20 • Sell: $20 / $18</p>
+      <!-- Stock +/- Controls -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex flex-wrap gap-2 justify-between">
+        <span class="text-xs text-slate-400 self-center font-semibold">Stock:</span>
+        <div class="flex gap-1.5">
+          <button type="button" onclick="adjustStock(1, -10)" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">-10</button>
+          <button type="button" onclick="adjustStock(1, -5)" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">-5</button>
+          <button type="button" onclick="adjustStock(1, -1)" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">-1</button>
+          <button type="button" onclick="adjustStock(1, 1)" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">+1</button>
+          <button type="button" onclick="adjustStock(1, 5)" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">+5</button>
+          <button type="button" onclick="adjustStock(1, 10)" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">+10</button>
         </div>
       </div>
-      <div class="text-right">
-        <p class="text-xs text-slate-400 font-semibold uppercase">Stock</p>
-        <p class="text-2xl font-black text-purple-400" id="p2Stock">0</p>
-      </div>
-    </div>
 
-    <!-- Stock Controls -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-      <p class="text-xs font-bold text-slate-300">Add Stock:</p>
-      <div class="grid grid-cols-3 gap-2">
-        <button onclick="addStock(2, 1)" class="bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold py-2 rounded-xl text-xs border border-slate-700 active:scale-95">+1 Stock</button>
-        <button onclick="addStock(2, 5)" class="bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold py-2 rounded-xl text-xs border border-slate-700 active:scale-95">+5 Stock</button>
-        <button onclick="addStock(2, 10)" class="bg-slate-800 hover:bg-slate-700 text-purple-400 font-bold py-2 rounded-xl text-xs border border-slate-700 active:scale-95">+10 Stock</button>
+      <!-- Quick Sell Panel -->
+      <div class="bg-gradient-to-r from-cyan-950/40 to-blue-950/40 border border-cyan-500/30 rounded-2xl p-4 space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-300">Quick Sell Product 1</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" onclick="sellProduct(1, 30)" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-md">Sell $30</button>
+          <button type="button" onclick="sellProduct(1, 25)" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-md">Sell $25</button>
+          <button type="button" onclick="sellProduct(1, 20)" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-md">Sell $20</button>
+        </div>
+        <div class="flex gap-2">
+          <input type="number" id="p1CustomPrice" placeholder="Custom $" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 text-xs text-white" />
+          <button type="button" onclick="sellCustom(1)" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Log Sale</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Log Sale -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-      <p class="text-xs font-bold text-slate-300">Log Sale (🤓):</p>
-      <div class="grid grid-cols-2 gap-2">
-        <button onclick="logSale(2, 20)" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95">Sell $20</button>
-        <button onclick="logSale(2, 18)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs active:scale-95">Sell $18</button>
+      <!-- Stats & Audit Log -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+          <p class="text-[11px] text-slate-400 uppercase font-semibold">Total Revenue</p>
+          <p class="text-xl font-black text-white mt-1" id="p1Revenue">$0</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+          <p class="text-[11px] text-slate-400 uppercase font-semibold">Total Sold</p>
+          <p class="text-xl font-black text-cyan-400 mt-1" id="p1SoldCount">0</p>
+        </div>
       </div>
-      <div class="flex gap-2 pt-1">
-        <input type="number" id="p2CustomPrice" placeholder="Custom $" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 text-xs text-white" min="1">
-        <button onclick="logCustomSale(2)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-2 rounded-xl text-xs border border-slate-700">Log</button>
-      </div>
-    </div>
 
-    <!-- Financial Stats & Audit Log -->
-    <div class="grid grid-cols-2 gap-3">
-      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl">
-        <p class="text-[10px] text-slate-400 font-bold uppercase">Total Revenue</p>
-        <p class="text-xl font-black text-emerald-400 mt-0.5" id="p2Revenue">$0</p>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h3 class="text-xs font-bold text-slate-300 mb-2">Product 1 Audit Log</h3>
+        <div id="p1AuditLog" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
       </div>
-      <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl">
-        <p class="text-[10px] text-slate-400 font-bold uppercase">Total Sold</p>
-        <p class="text-xl font-black text-white mt-0.5" id="p2SoldQty">0 units</p>
-      </div>
-    </div>
+    </section>
 
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-      <h3 class="text-xs font-bold text-slate-300">🤓 Audit Log</h3>
-      <div id="p2Log" class="space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar text-xs"></div>
-    </div>
+    <!-- ================= PAGE 2: PRODUCT 2 (🤓) ================= -->
+    <section id="page2" class="space-y-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="text-3xl">🤓</div>
+          <div>
+            <h2 class="text-base font-bold text-white">Product 2</h2>
+            <p class="text-xs text-slate-400">Worth ~$20 (Sell: $20 or $18)</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-slate-400">In Stock</p>
+          <p class="text-2xl font-black text-purple-400" id="p2Stock">0</p>
+        </div>
+      </div>
+
+      <!-- Stock +/- Controls -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex flex-wrap gap-2 justify-between">
+        <span class="text-xs text-slate-400 self-center font-semibold">Stock:</span>
+        <div class="flex gap-1.5">
+          <button type="button" onclick="adjustStock(2, -10)" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">-10</button>
+          <button type="button" onclick="adjustStock(2, -5)" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">-5</button>
+          <button type="button" onclick="adjustStock(2, -1)" class="bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">-1</button>
+          <button type="button" onclick="adjustStock(2, 1)" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">+1</button>
+          <button type="button" onclick="adjustStock(2, 5)" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">+5</button>
+          <button type="button" onclick="adjustStock(2, 10)" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-lg text-xs font-bold">+10</button>
+        </div>
+      </div>
+
+      <!-- Quick Sell Panel -->
+      <div class="bg-gradient-to-r from-purple-950/40 to-indigo-950/40 border border-purple-500/30 rounded-2xl p-4 space-y-3">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-purple-300">Quick Sell Product 2</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="sellProduct(2, 20)" class="bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-md">Sell $20</button>
+          <button type="button" onclick="sellProduct(2, 18)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 px-3 rounded-xl text-xs shadow-md">Sell $18</button>
+        </div>
+        <div class="flex gap-2">
+          <input type="number" id="p2CustomPrice" placeholder="Custom $" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 text-xs text-white" />
+          <button type="button" onclick="sellCustom(2)" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Log Sale</button>
+        </div>
+      </div>
+
+      <!-- Stats & Audit Log -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+          <p class="text-[11px] text-slate-400 uppercase font-semibold">Total Revenue</p>
+          <p class="text-xl font-black text-white mt-1" id="p2Revenue">$0</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl">
+          <p class="text-[11px] text-slate-400 uppercase font-semibold">Total Sold</p>
+          <p class="text-xl font-black text-purple-400 mt-1" id="p2SoldCount">0</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h3 class="text-xs font-bold text-slate-300 mb-2">Product 2 Audit Log</h3>
+        <div id="p2AuditLog" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 3: PLAYBOOK (📋) ================= -->
+    <section id="page3" class="space-y-4 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white">📋 Squad Playbook</h2>
+          <p class="text-xs text-slate-400">Schedules & Deliveries (Korbin, Tyson, Kolton)</p>
+        </div>
+        <button type="button" onclick="openModal('taskModal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold">+ Add Task</button>
+      </div>
+
+      <div id="taskList" class="space-y-2.5">
+        <!-- Rendered tasks -->
+      </div>
+    </section>
+
+    <!-- ================= PAGE 4: SQUAD CHAT (💬) ================= -->
+    <section id="page4" class="space-y-4 hidden flex flex-col h-[75vh]">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+        <h2 class="text-base font-bold text-white">💬 Squad Team Chat</h2>
+        <p class="text-xs text-slate-400">Live messaging for Kolton, Tyson, and Korbin</p>
+      </div>
+
+      <div id="chatFeed" class="flex-1 bg-slate-900/60 border border-slate-800 rounded-2xl p-3 overflow-y-auto custom-scrollbar space-y-3">
+        <!-- Chat messages -->
+      </div>
+
+      <div class="flex gap-2">
+        <input type="text" id="chatInput" placeholder="Type message..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-white" onkeypress="if(event.key==='Enter')sendChatMessage()" />
+        <button type="button" onclick="sendChatMessage()" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 py-2 rounded-xl text-xs">Send</button>
+      </div>
+    </section>
+
   </main>
 
-  <!-- ================= PAGE 3: 📋 PLAYBOOK ================= -->
-  <main id="page3" class="flex-1 max-w-lg w-full mx-auto p-4 space-y-4 pb-24 hidden">
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-      <h2 class="font-extrabold text-base text-white flex items-center gap-2">
-        <span>📋 Sales Playbook & Schedule</span>
-      </h2>
-      <p class="text-xs text-slate-400 mt-0.5">Plan who is selling what, to whom, and when.</p>
-    </div>
+  <!-- Bottom Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-2 z-40 flex justify-around">
+    <button type="button" onclick="switchPage(1)" id="nav1" class="flex flex-col items-center py-1 px-3 rounded-xl text-cyan-400 font-bold text-xs">
+      <span class="text-xl">🛒</span>
+      <span class="text-[10px] mt-0.5">Product 1</span>
+    </button>
+    <button type="button" onclick="switchPage(2)" id="nav2" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs">
+      <span class="text-xl">🤓</span>
+      <span class="text-[10px] mt-0.5">Product 2</span>
+    </button>
+    <button type="button" onclick="switchPage(3)" id="nav3" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs">
+      <span class="text-xl">📋</span>
+      <span class="text-[10px] mt-0.5">Playbook</span>
+    </button>
+    <button type="button" onclick="switchPage(4)" id="nav4" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs">
+      <span class="text-xl">💬</span>
+      <span class="text-[10px] mt-0.5">Chat</span>
+    </button>
+  </nav>
 
-    <!-- Add Task Form -->
-    <form onsubmit="addPlaybookEntry(event)" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-      <p class="text-xs font-bold text-slate-300">New Deal / Delivery Task:</p>
-      <div class="grid grid-cols-2 gap-2">
-        <select id="pbAssignee" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+  <!-- Add Task Modal -->
+  <div id="taskModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-5 space-y-3">
+      <h3 class="font-bold text-sm text-white">Add Playbook Schedule</h3>
+      <div>
+        <label class="text-[11px] text-slate-400">Buyer / Details</label>
+        <input type="text" id="taskBuyer" placeholder="e.g. John wants 2 chargers" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
+      </div>
+      <div>
+        <label class="text-[11px] text-slate-400">Assign Member</label>
+        <select id="taskAssignee" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white">
           <option value="Kolton">Kolton</option>
           <option value="Tyson">Tyson</option>
           <option value="Korbin">Korbin</option>
         </select>
-        <select id="pbProduct" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-          <option value="🛒 Charger">🛒 Product 1</option>
-          <option value="🤓 Product B">🤓 Product 2</option>
-        </select>
       </div>
-      <input type="text" id="pbBuyer" placeholder="Buyer Name / Location" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-      <input type="text" id="pbTime" placeholder="Time / Date (e.g. 3:30 PM Today)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-      <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 rounded-xl text-xs active:scale-95 transition-all">+ Add to Playbook</button>
-    </form>
-
-    <!-- Schedule List -->
-    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2">
-      <h3 class="text-xs font-bold text-slate-300">Scheduled Deals</h3>
-      <div id="playbookList" class="space-y-2 max-h-72 overflow-y-auto custom-scrollbar text-xs"></div>
-    </div>
-  </main>
-
-  <!-- ================= PAGE 4: 💬 CHAT ================= -->
-  <main id="page4" class="flex-1 max-w-lg w-full mx-auto p-4 flex flex-col justify-between pb-24 hidden">
-    <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl mb-3 flex justify-between items-center">
       <div>
-        <h2 class="font-bold text-sm text-white">💬 Squad Team Chat</h2>
-        <p class="text-[10px] text-slate-400">Kolton • Tyson • Korbin</p>
+        <label class="text-[11px] text-slate-400">Time / Date</label>
+        <input type="text" id="taskTime" placeholder="e.g. Today at 4:30 PM" class="w-full mt-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white" />
       </div>
-      <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-cyan-400 font-medium">Live</span>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeModal('taskModal')" class="flex-1 bg-slate-800 text-white py-2 rounded-xl text-xs font-bold">Cancel</button>
+        <button type="button" onclick="saveTask()" class="flex-1 bg-cyan-600 text-white py-2 rounded-xl text-xs font-bold">Add Task</button>
+      </div>
     </div>
+  </div>
 
-    <!-- Chat Messages Feed -->
-    <div id="chatFeed" class="flex-1 space-y-2 overflow-y-auto custom-scrollbar max-h-[50vh] p-1 mb-3"></div>
-
-    <!-- Send Form -->
-    <form onsubmit="sendChatMessage(event)" class="flex gap-2">
-      <input type="text" id="chatInput" placeholder="Type a message..." required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
-      <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-4 rounded-xl text-xs active:scale-95">Send</button>
-    </form>
-  </main>
-
-  <!-- Bottom Swappable Nav Bar -->
-  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-2">
-    <div class="max-w-lg mx-auto flex justify-around">
-      <button onclick="switchTab(1)" id="nav1" class="flex flex-col items-center py-1 px-3 rounded-xl text-cyan-400 font-bold text-xs">
-        <span class="text-xl">🛒</span>
-        <span>Product 1</span>
-      </button>
-      <button onclick="switchTab(2)" id="nav2" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 hover:text-white font-bold text-xs">
-        <span class="text-xl">🤓</span>
-        <span>Product 2</span>
-      </button>
-      <button onclick="switchTab(3)" id="nav3" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 hover:text-white font-bold text-xs">
-        <span class="text-xl">📋</span>
-        <span>Playbook</span>
-      </button>
-      <button onclick="switchTab(4)" id="nav4" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 hover:text-white font-bold text-xs">
-        <span class="text-xl">💬</span>
-        <span>Squad Chat</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- User Selection Modal -->
+  <!-- Role Selection Modal -->
   <div id="userModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-6 shadow-2xl">
-      <div class="text-center mb-4">
-        <h2 class="text-lg font-bold text-white">Select Your Identity</h2>
-        <p class="text-xs text-slate-400">Choose who you are on this device</p>
-      </div>
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-xs rounded-2xl p-5 space-y-3 text-center">
+      <h3 class="font-bold text-sm text-white">Who are you?</h3>
       <div class="space-y-2">
-        <button onclick="selectUser('Kolton')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold p-3 rounded-xl text-xs flex justify-between"><span>Kolton</span><span class="text-cyan-400">Select →</span></button>
-        <button onclick="selectUser('Tyson')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold p-3 rounded-xl text-xs flex justify-between"><span>Tyson</span><span class="text-cyan-400">Select →</span></button>
-        <button onclick="selectUser('Korbin')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold p-3 rounded-xl text-xs flex justify-between"><span>Korbin</span><span class="text-purple-400">Select →</span></button>
+        <button type="button" onclick="selectUser('Kolton')" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-xs font-bold text-cyan-400">Kolton</button>
+        <button type="button" onclick="selectUser('Tyson')" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-xs font-bold text-blue-400">Tyson</button>
+        <button type="button" onclick="selectUser('Korbin')" class="w-full bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-xs font-bold text-purple-400">Korbin</button>
       </div>
     </div>
   </div>
 
-  <!-- iOS PWA Guide Modal -->
+  <!-- Guide Modal -->
   <div id="guideModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-6 space-y-4">
-      <div class="flex justify-between items-center">
-        <h3 class="font-bold text-sm text-white">📱 Safari PWA Setup</h3>
-        <button onclick="closeModal('guideModal')" class="text-slate-400">✕</button>
-      </div>
-      <div class="text-xs text-slate-300 space-y-2">
-        <p>1. Open this link in <strong>Safari</strong> on iPhone.</p>
-        <p>2. Tap the <strong>Share</strong> button (bottom toolbar).</p>
-        <p>3. Tap <strong>"Add to Home Screen"</strong>.</p>
-      </div>
-      <button onclick="closeModal('guideModal')" class="w-full bg-slate-800 text-white font-bold py-2 rounded-xl text-xs">Close</button>
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl p-5 space-y-3">
+      <h3 class="font-bold text-sm text-white">📱 iPhone Web App Instructions</h3>
+      <p class="text-xs text-slate-300">Open this page in Safari $\rightarrow$ Tap the <strong>Share button</strong> $\rightarrow$ Select <strong>"Add to Home Screen"</strong> to use it like a native app!</p>
+      <button type="button" onclick="closeModal('guideModal')" class="w-full bg-slate-800 py-2 rounded-xl text-xs font-bold text-white">Close</button>
     </div>
   </div>
 
-  <!-- Application Logic -->
+  <!-- Application Script -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCr9oRKHXDchgFtXncCST1_hVretfy7KfE",
       authDomain: "ultra-chargers.firebaseapp.com",
+      databaseURL: "https://ultra-chargers-default-rtdb.firebaseio.com",
       projectId: "ultra-chargers",
       storageBucket: "ultra-chargers.firebasestorage.app",
       messagingSenderId: "687963494978",
@@ -293,16 +297,20 @@
     };
 
     let db = null;
-    let currentUser = localStorage.getItem('sq_user') || 'Kolton';
+    let currentUser = localStorage.getItem('squad_user') || 'Kolton';
 
-    const defaultData = {
-      p1: { stock: 10, soldQty: 1, revenue: 30, logs: [{ user: 'Tyson', text: 'Sold 1 unit for $30', time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }] },
-      p2: { stock: 10, soldQty: 0, revenue: 0, logs: [] },
-      playbook: [],
+    const defaultState = {
+      p1Stock: 10,
+      p2Stock: 10,
+      p1Sales: [],
+      p2Sales: [],
+      p1Audit: [],
+      p2Audit: [],
+      tasks: [],
       chat: []
     };
 
-    let appData = JSON.parse(localStorage.getItem('sq_data')) || defaultData;
+    let appState = JSON.parse(localStorage.getItem('squad_state')) || defaultState;
 
     window.addEventListener('DOMContentLoaded', () => {
       initFirebase();
@@ -314,50 +322,43 @@
       try {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
+        document.getElementById('syncStatusText').innerText = "Live Sync Active";
 
-        document.getElementById('syncStatusText').innerText = "Live Cloud Synced";
-        document.getElementById('syncIndicator').className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse";
-
-        db.collection("squad_tracker").doc("main_state")
+        db.collection("squad_tracker").doc("main_data")
           .onSnapshot((doc) => {
             if (doc.exists) {
-              appData = doc.data();
-              localStorage.setItem('sq_data', JSON.stringify(appData));
+              appState = doc.data();
+              localStorage.setItem('squad_state', JSON.stringify(appState));
               renderAll();
             } else {
-              db.collection("squad_tracker").doc("main_state").set(defaultData);
+              db.collection("squad_tracker").doc("main_data").set(defaultState);
             }
-          }, (err) => {
-            console.error("Firestore sync error:", err);
-            document.getElementById('syncStatusText').innerText = "Offline Mode";
-            document.getElementById('syncIndicator').className = "w-2 h-2 rounded-full bg-amber-400";
           });
       } catch (err) {
-        console.warn("Firebase warning:", err);
+        document.getElementById('syncStatusText').innerText = "Local Mode";
       }
     }
 
     function syncState() {
-      localStorage.setItem('sq_data', JSON.stringify(appData));
+      localStorage.setItem('squad_state', JSON.stringify(appState));
       renderAll();
       if (db) {
-        db.collection("squad_tracker").doc("main_state").set(appData)
-          .catch(err => console.error("Cloud push failed:", err));
+        db.collection("squad_tracker").doc("main_data").set(appState).catch(err => console.error(err));
       }
     }
 
-    function switchTab(tabNum) {
+    function switchPage(pageNum) {
       for (let i = 1; i <= 4; i++) {
-        document.getElementById(`page${i}`).classList.add('hidden');
-        document.getElementById(`nav${i}`).className = "flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 hover:text-white font-bold text-xs";
+        document.getElementById('page' + i).classList.add('hidden');
+        document.getElementById('nav' + i).className = "flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs";
       }
-      document.getElementById(`page${tabNum}`).classList.remove('hidden');
-      document.getElementById(`nav${tabNum}`).className = "flex flex-col items-center py-1 px-3 rounded-xl text-cyan-400 font-bold text-xs";
+      document.getElementById('page' + pageNum).classList.remove('hidden');
+      document.getElementById('nav' + pageNum).className = "flex flex-col items-center py-1 px-3 rounded-xl text-cyan-400 font-bold text-xs";
     }
 
     function selectUser(name) {
       currentUser = name;
-      localStorage.setItem('sq_user', name);
+      localStorage.setItem('squad_user', name);
       setupUserUI();
       closeModal('userModal');
     }
@@ -366,139 +367,133 @@
       document.getElementById('activeUserLabel').innerText = currentUser;
     }
 
-    function addStock(prodNum, qty) {
-      const key = prodNum === 1 ? 'p1' : 'p2';
-      appData[key].stock += qty;
-      appData[key].logs.unshift({
-        user: currentUser,
-        text: `Added +${qty} stock`,
-        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-      });
-      syncState();
-    }
-
-    function logSale(prodNum, price) {
-      const key = prodNum === 1 ? 'p1' : 'p2';
-      if (appData[key].stock <= 0) {
-        alert("Out of stock!");
-        return;
+    function adjustStock(productNum, amount) {
+      if (productNum === 1) {
+        appState.p1Stock = Math.max(0, (appState.p1Stock || 0) + amount);
+        appState.p1Audit.unshift({
+          text: `${currentUser} adjusted stock by ${amount > 0 ? '+' + amount : amount}`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+      } else {
+        appState.p2Stock = Math.max(0, (appState.p2Stock || 0) + amount);
+        appState.p2Audit.unshift({
+          text: `${currentUser} adjusted stock by ${amount > 0 ? '+' + amount : amount}`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
       }
-      appData[key].stock -= 1;
-      appData[key].soldQty += 1;
-      appData[key].revenue += price;
-      appData[key].logs.unshift({
-        user: currentUser,
-        text: `Sold 1 unit for $${price}`,
-        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-      });
       syncState();
     }
 
-    function logCustomSale(prodNum) {
-      const input = document.getElementById(prodNum === 1 ? 'p1CustomPrice' : 'p2CustomPrice');
-      const price = parseFloat(input.value);
-      if (price && price > 0) {
-        logSale(prodNum, price);
+    function sellProduct(productNum, price) {
+      const sale = {
+        price: Number(price),
+        seller: currentUser,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      if (productNum === 1) {
+        if (appState.p1Stock <= 0) { alert("Product 1 is out of stock!"); return; }
+        appState.p1Stock--;
+        appState.p1Sales.unshift(sale);
+        appState.p1Audit.unshift({ text: `${currentUser} sold P1 for $${price}`, time: sale.time });
+      } else {
+        if (appState.p2Stock <= 0) { alert("Product 2 is out of stock!"); return; }
+        appState.p2Stock--;
+        appState.p2Sales.unshift(sale);
+        appState.p2Audit.unshift({ text: `${currentUser} sold P2 for $${price}`, time: sale.time });
+      }
+      syncState();
+    }
+
+    function sellCustom(productNum) {
+      const input = document.getElementById(productNum === 1 ? 'p1CustomPrice' : 'p2CustomPrice');
+      const val = parseFloat(input.value);
+      if (val > 0) {
+        sellProduct(productNum, val);
         input.value = '';
       }
     }
 
-    function addPlaybookEntry(e) {
-      e.preventDefault();
-      const assignee = document.getElementById('pbAssignee').value;
-      const product = document.getElementById('pbProduct').value;
-      const buyer = document.getElementById('pbBuyer').value;
-      const time = document.getElementById('pbTime').value;
+    function saveTask() {
+      const buyer = document.getElementById('taskBuyer').value;
+      const assignee = document.getElementById('taskAssignee').value;
+      const time = document.getElementById('taskTime').value;
 
-      appData.playbook.unshift({
-        id: 'pb_' + Date.now(),
-        assignee,
-        product,
-        buyer,
-        time,
-        done: false
-      });
+      if (buyer && time) {
+        appState.tasks.unshift({
+          id: 'task_' + Date.now(),
+          buyer, assignee, time, done: false
+        });
+        syncState();
+        closeModal('taskModal');
+        document.getElementById('taskBuyer').value = '';
+        document.getElementById('taskTime').value = '';
+      }
+    }
 
-      document.getElementById('pbBuyer').value = '';
-      document.getElementById('pbTime').value = '';
+    function toggleTask(id) {
+      const t = appState.tasks.find(x => x.id === id);
+      if (t) { t.done = !t.done; syncState(); }
+    }
+
+    function deleteTask(id) {
+      appState.tasks = appState.tasks.filter(x => x.id !== id);
       syncState();
     }
 
-    function togglePlaybookDone(id) {
-      const entry = appData.playbook.find(p => p.id === id);
-      if (entry) {
-        entry.done = !entry.done;
+    function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (text) {
+        appState.chat.push({
+          sender: currentUser,
+          text,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        input.value = '';
         syncState();
       }
     }
 
-    function sendChatMessage(e) {
-      e.preventDefault();
-      const input = document.getElementById('chatInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      appData.chat.push({
-        id: 'msg_' + Date.now(),
-        user: currentUser,
-        text: text,
-        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-      });
-
-      input.value = '';
-      syncState();
-    }
-
     function renderAll() {
-      // P1 Render
-      document.getElementById('p1Stock').innerText = appData.p1.stock;
-      document.getElementById('p1Revenue').innerText = `$${appData.p1.revenue}`;
-      document.getElementById('p1SoldQty').innerText = `${appData.p1.soldQty} units`;
-      document.getElementById('p1Log').innerHTML = (appData.p1.logs || []).map(l => `
-        <div class="flex justify-between bg-slate-950 p-2 rounded-lg border border-slate-800">
-          <span><strong class="text-cyan-400">${l.user}</strong>: ${l.text}</span>
-          <span class="text-slate-500 text-[10px]">${l.time}</span>
-        </div>
-      `).join('');
+      // P1
+      document.getElementById('p1Stock').innerText = appState.p1Stock || 0;
+      const p1Rev = (appState.p1Sales || []).reduce((a, b) => a + b.price, 0);
+      document.getElementById('p1Revenue').innerText = `$${p1Rev}`;
+      document.getElementById('p1SoldCount').innerText = (appState.p1Sales || []).length;
+      document.getElementById('p1AuditLog').innerHTML = (appState.p1Audit || []).map(a => `<div class="bg-slate-800/50 p-2 rounded-xl text-xs flex justify-between"><span>${a.text}</span><span class="text-slate-500">${a.time}</span></div>`).join('');
 
-      // P2 Render
-      document.getElementById('p2Stock').innerText = appData.p2.stock;
-      document.getElementById('p2Revenue').innerText = `$${appData.p2.revenue}`;
-      document.getElementById('p2SoldQty').innerText = `${appData.p2.soldQty} units`;
-      document.getElementById('p2Log').innerHTML = (appData.p2.logs || []).map(l => `
-        <div class="flex justify-between bg-slate-950 p-2 rounded-lg border border-slate-800">
-          <span><strong class="text-purple-400">${l.user}</strong>: ${l.text}</span>
-          <span class="text-slate-500 text-[10px]">${l.time}</span>
-        </div>
-      `).join('');
+      // P2
+      document.getElementById('p2Stock').innerText = appState.p2Stock || 0;
+      const p2Rev = (appState.p2Sales || []).reduce((a, b) => a + b.price, 0);
+      document.getElementById('p2Revenue').innerText = `$${p2Rev}`;
+      document.getElementById('p2SoldCount').innerText = (appState.p2Sales || []).length;
+      document.getElementById('p2AuditLog').innerHTML = (appState.p2Audit || []).map(a => `<div class="bg-slate-800/50 p-2 rounded-xl text-xs flex justify-between"><span>${a.text}</span><span class="text-slate-500">${a.time}</span></div>`).join('');
 
-      // Playbook Render
-      document.getElementById('playbookList').innerHTML = (appData.playbook || []).map(pb => `
-        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between">
-          <div class="${pb.done ? 'line-through opacity-50' : ''}">
-            <div class="flex items-center space-x-2">
-              <span class="font-bold text-white">${pb.assignee}</span>
-              <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">${pb.product}</span>
+      // Playbook
+      document.getElementById('taskList').innerHTML = (appState.tasks || []).length === 0 ? '<p class="text-xs text-slate-500 text-center py-4">No playbook tasks yet.</p>' : (appState.tasks || []).map(t => `
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-3">
+            <input type="checkbox" ${t.done ? 'checked' : ''} onclick="toggleTask('${t.id}')" class="w-4 h-4 accent-cyan-500" />
+            <div>
+              <p class="font-bold ${t.done ? 'line-through text-slate-500' : 'text-white'}">${t.buyer}</p>
+              <p class="text-[10px] text-cyan-400">Assigned: ${t.assignee} • ${t.time}</p>
             </div>
-            <p class="text-slate-300 mt-0.5">To: ${pb.buyer}</p>
-            <p class="text-[10px] text-slate-500">📅 ${pb.time}</p>
           </div>
-          <button onclick="togglePlaybookDone('${pb.id}')" class="p-2 text-base">${pb.done ? '✅' : '⏳'}</button>
+          <button type="button" onclick="deleteTask('${t.id}')" class="text-slate-500 hover:text-red-400">✕</button>
         </div>
       `).join('');
 
-      // Chat Render
-      const chatFeed = document.getElementById('chatFeed');
-      chatFeed.innerHTML = (appData.chat || []).map(c => `
-        <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs">
-          <div class="flex justify-between items-center mb-1">
-            <span class="font-bold ${c.user === 'Kolton' ? 'text-cyan-400' : c.user === 'Tyson' ? 'text-blue-400' : 'text-purple-400'}">${c.user}</span>
-            <span class="text-[10px] text-slate-500">${c.time}</span>
+      // Chat
+      document.getElementById('chatFeed').innerHTML = (appState.chat || []).map(c => `
+        <div class="bg-slate-800/60 p-2.5 rounded-xl text-xs">
+          <div class="flex justify-between font-bold text-cyan-400 mb-0.5">
+            <span>${c.sender}</span>
+            <span class="text-[10px] text-slate-500 font-normal">${c.time}</span>
           </div>
           <p class="text-slate-200">${c.text}</p>
         </div>
       `).join('');
-      chatFeed.scrollTop = chatFeed.scrollHeight;
     }
 
     function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
