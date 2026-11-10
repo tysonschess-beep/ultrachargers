@@ -77,7 +77,7 @@
         </div>
       </div>
 
-      <!-- Stock +/- Controls -->
+      <!-- Stock Controls -->
       <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex flex-wrap gap-2 justify-between">
         <span class="text-xs text-slate-400 self-center font-semibold">Stock:</span>
         <div class="flex gap-1.5">
@@ -138,7 +138,7 @@
         </div>
       </div>
 
-      <!-- Stock +/- Controls -->
+      <!-- Stock Controls -->
       <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex flex-wrap gap-2 justify-between">
         <span class="text-xs text-slate-400 self-center font-semibold">Stock:</span>
         <div class="flex gap-1.5">
@@ -187,14 +187,12 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex items-center justify-between">
         <div>
           <h2 class="text-base font-bold text-white">📋 Squad Playbook</h2>
-          <p class="text-xs text-slate-400">Schedules & Deliveries (Korbin, Tyson, Kolton)</p>
+          <p class="text-xs text-slate-400">Schedules & Deliveries</p>
         </div>
         <button type="button" onclick="openModal('taskModal')" class="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold">+ Add Task</button>
       </div>
 
-      <div id="taskList" class="space-y-2.5">
-        <!-- Rendered tasks -->
-      </div>
+      <div id="taskList" class="space-y-2.5"></div>
     </section>
 
     <!-- ================= PAGE 4: SQUAD CHAT (💬) ================= -->
@@ -204,9 +202,7 @@
         <p class="text-xs text-slate-400">Live messaging for Kolton, Tyson, and Korbin</p>
       </div>
 
-      <div id="chatFeed" class="flex-1 bg-slate-900/60 border border-slate-800 rounded-2xl p-3 overflow-y-auto custom-scrollbar space-y-3">
-        <!-- Chat messages -->
-      </div>
+      <div id="chatFeed" class="flex-1 bg-slate-900/60 border border-slate-800 rounded-2xl p-3 overflow-y-auto custom-scrollbar space-y-3"></div>
 
       <div class="flex gap-2">
         <input type="text" id="chatInput" placeholder="Type message..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 text-xs text-white" onkeypress="if(event.key==='Enter')sendChatMessage()" />
@@ -214,25 +210,57 @@
       </div>
     </section>
 
+    <!-- ================= PAGE 5: BANK (🏦) ================= -->
+    <section id="page5" class="space-y-4 hidden">
+      <div class="bg-gradient-to-r from-emerald-950/50 via-slate-900 to-teal-950/50 border border-emerald-500/30 rounded-3xl p-6 text-center space-y-2">
+        <p class="text-xs font-bold uppercase tracking-wider text-emerald-400">Total Squad Vault</p>
+        <h2 class="text-4xl font-black text-white" id="bankBalanceDisplay">$0.00</h2>
+        <p class="text-[11px] text-slate-400">Includes automatic sales deposits and manual cash updates.</p>
+      </div>
+
+      <!-- Bank Adjustment Panel -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+        <h3 class="text-xs font-bold text-slate-300 uppercase">Adjust Bank Cash</h3>
+        <div class="flex gap-2">
+          <input type="number" id="bankAdjustAmount" placeholder="Amount $" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 text-xs text-white" min="0.01" step="0.01" />
+          <select id="bankAdjustType" class="bg-slate-800 border border-slate-700 rounded-xl px-3 text-xs text-white">
+            <option value="add">Deposit (+)</option>
+            <option value="subtract">Withdraw (-)</option>
+          </select>
+        </div>
+        <input type="text" id="bankAdjustNote" placeholder="Note / Reason (e.g., Bought stock)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+        <button type="button" onclick="adjustBankCash()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs">Update Bank Balance</button>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+        <h3 class="text-xs font-bold text-slate-300 mb-2">Bank Activity & Transaction Log</h3>
+        <div id="bankAuditLog" class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-1"></div>
+      </div>
+    </section>
+
   </main>
 
-  <!-- Bottom Navigation Bar -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-2 z-40 flex justify-around">
-    <button type="button" onclick="switchPage(1)" id="nav1" class="flex flex-col items-center py-1 px-3 rounded-xl text-cyan-400 font-bold text-xs">
-      <span class="text-xl">🛒</span>
-      <span class="text-[10px] mt-0.5">Product 1</span>
+  <!-- Bottom Navigation Bar (5 Tabs) -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-2 py-2 z-40 flex justify-around">
+    <button type="button" onclick="switchPage(1)" id="nav1" class="flex flex-col items-center py-1 px-2.5 rounded-xl text-cyan-400 font-bold text-xs">
+      <span class="text-lg">🛒</span>
+      <span class="text-[9px] mt-0.5">Prod 1</span>
     </button>
-    <button type="button" onclick="switchPage(2)" id="nav2" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs">
-      <span class="text-xl">🤓</span>
-      <span class="text-[10px] mt-0.5">Product 2</span>
+    <button type="button" onclick="switchPage(2)" id="nav2" class="flex flex-col items-center py-1 px-2.5 rounded-xl text-slate-400 font-bold text-xs">
+      <span class="text-lg">🤓</span>
+      <span class="text-[9px] mt-0.5">Prod 2</span>
     </button>
-    <button type="button" onclick="switchPage(3)" id="nav3" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs">
-      <span class="text-xl">📋</span>
-      <span class="text-[10px] mt-0.5">Playbook</span>
+    <button type="button" onclick="switchPage(3)" id="nav3" class="flex flex-col items-center py-1 px-2.5 rounded-xl text-slate-400 font-bold text-xs">
+      <span class="text-lg">📋</span>
+      <span class="text-[9px] mt-0.5">Playbook</span>
     </button>
-    <button type="button" onclick="switchPage(4)" id="nav4" class="flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs">
-      <span class="text-xl">💬</span>
-      <span class="text-[10px] mt-0.5">Chat</span>
+    <button type="button" onclick="switchPage(4)" id="nav4" class="flex flex-col items-center py-1 px-2.5 rounded-xl text-slate-400 font-bold text-xs">
+      <span class="text-lg">💬</span>
+      <span class="text-[9px] mt-0.5">Chat</span>
+    </button>
+    <button type="button" onclick="switchPage(5)" id="nav5" class="flex flex-col items-center py-1 px-2.5 rounded-xl text-slate-400 font-bold text-xs">
+      <span class="text-lg">🏦</span>
+      <span class="text-[9px] mt-0.5">Bank</span>
     </button>
   </nav>
 
@@ -302,10 +330,12 @@
     const defaultState = {
       p1Stock: 10,
       p2Stock: 10,
+      bankBalance: 0,
       p1Sales: [],
       p2Sales: [],
       p1Audit: [],
       p2Audit: [],
+      bankAudit: [],
       tasks: [],
       chat: []
     };
@@ -348,12 +378,12 @@
     }
 
     function switchPage(pageNum) {
-      for (let i = 1; i <= 4; i++) {
+      for (let i = 1; i <= 5; i++) {
         document.getElementById('page' + i).classList.add('hidden');
-        document.getElementById('nav' + i).className = "flex flex-col items-center py-1 px-3 rounded-xl text-slate-400 font-bold text-xs";
+        document.getElementById('nav' + i).className = "flex flex-col items-center py-1 px-2.5 rounded-xl text-slate-400 font-bold text-xs";
       }
       document.getElementById('page' + pageNum).classList.remove('hidden');
-      document.getElementById('nav' + pageNum).className = "flex flex-col items-center py-1 px-3 rounded-xl text-cyan-400 font-bold text-xs";
+      document.getElementById('nav' + pageNum).className = "flex flex-col items-center py-1 px-2.5 rounded-xl text-cyan-400 font-bold text-xs";
     }
 
     function selectUser(name) {
@@ -368,40 +398,44 @@
     }
 
     function adjustStock(productNum, amount) {
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       if (productNum === 1) {
         appState.p1Stock = Math.max(0, (appState.p1Stock || 0) + amount);
-        appState.p1Audit.unshift({
-          text: `${currentUser} adjusted stock by ${amount > 0 ? '+' + amount : amount}`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
+        appState.p1Audit.unshift({ text: `${currentUser} adjusted stock by ${amount > 0 ? '+' + amount : amount}`, time });
       } else {
         appState.p2Stock = Math.max(0, (appState.p2Stock || 0) + amount);
-        appState.p2Audit.unshift({
-          text: `${currentUser} adjusted stock by ${amount > 0 ? '+' + amount : amount}`,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
+        appState.p2Audit.unshift({ text: `${currentUser} adjusted stock by ${amount > 0 ? '+' + amount : amount}`, time });
       }
       syncState();
     }
 
     function sellProduct(productNum, price) {
-      const sale = {
-        price: Number(price),
-        seller: currentUser,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
+      const numPrice = Number(price);
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const sale = { price: numPrice, seller: currentUser, time };
 
       if (productNum === 1) {
         if (appState.p1Stock <= 0) { alert("Product 1 is out of stock!"); return; }
         appState.p1Stock--;
         appState.p1Sales.unshift(sale);
-        appState.p1Audit.unshift({ text: `${currentUser} sold P1 for $${price}`, time: sale.time });
+        appState.p1Audit.unshift({ text: `${currentUser} sold P1 for $${numPrice}`, time });
       } else {
         if (appState.p2Stock <= 0) { alert("Product 2 is out of stock!"); return; }
         appState.p2Stock--;
         appState.p2Sales.unshift(sale);
-        appState.p2Audit.unshift({ text: `${currentUser} sold P2 for $${price}`, time: sale.time });
+        appState.p2Audit.unshift({ text: `${currentUser} sold P2 for $${numPrice}`, time });
       }
+
+      // Auto deposit sale into bank
+      appState.bankBalance = (appState.bankBalance || 0) + numPrice;
+      appState.bankAudit.unshift({
+        user: currentUser,
+        text: `Auto-deposit: Sale of Prod ${productNum} for +$${numPrice}`,
+        amount: `+$${numPrice}`,
+        isPos: true,
+        time
+      });
+
       syncState();
     }
 
@@ -414,16 +448,47 @@
       }
     }
 
+    function adjustBankCash() {
+      const amountInput = document.getElementById('bankAdjustAmount');
+      const noteInput = document.getElementById('bankAdjustNote');
+      const type = document.getElementById('bankAdjustType').value;
+      const val = parseFloat(amountInput.value);
+      const note = noteInput.value.trim();
+
+      if (val > 0) {
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (type === 'add') {
+          appState.bankBalance = (appState.bankBalance || 0) + val;
+          appState.bankAudit.unshift({
+            user: currentUser,
+            text: note ? `Deposit: ${note}` : 'Manual Deposit',
+            amount: `+$${val.toFixed(2)}`,
+            isPos: true,
+            time
+          });
+        } else {
+          appState.bankBalance = Math.max(0, (appState.bankBalance || 0) - val);
+          appState.bankAudit.unshift({
+            user: currentUser,
+            text: note ? `Withdrawal: ${note}` : 'Manual Withdrawal',
+            amount: `-$${val.toFixed(2)}`,
+            isPos: false,
+            time
+          });
+        }
+        amountInput.value = '';
+        noteInput.value = '';
+        syncState();
+      }
+    }
+
     function saveTask() {
       const buyer = document.getElementById('taskBuyer').value;
       const assignee = document.getElementById('taskAssignee').value;
       const time = document.getElementById('taskTime').value;
 
       if (buyer && time) {
-        appState.tasks.unshift({
-          id: 'task_' + Date.now(),
-          buyer, assignee, time, done: false
-        });
+        appState.tasks.unshift({ id: 'task_' + Date.now(), buyer, assignee, time, done: false });
         syncState();
         closeModal('taskModal');
         document.getElementById('taskBuyer').value = '';
@@ -492,6 +557,19 @@
             <span class="text-[10px] text-slate-500 font-normal">${c.time}</span>
           </div>
           <p class="text-slate-200">${c.text}</p>
+        </div>
+      `).join('');
+
+      // Bank
+      const bal = appState.bankBalance || 0;
+      document.getElementById('bankBalanceDisplay').innerText = `$${bal.toFixed(2)}`;
+      document.getElementById('bankAuditLog').innerHTML = (appState.bankAudit || []).length === 0 ? '<p class="text-xs text-slate-500 text-center py-4">No bank transactions logged yet.</p>' : (appState.bankAudit || []).map(b => `
+        <div class="bg-slate-800/50 p-2.5 rounded-xl text-xs flex justify-between items-center">
+          <div>
+            <p class="font-semibold text-white">${b.text}</p>
+            <p class="text-[10px] text-slate-400">By: ${b.user} • ${b.time}</p>
+          </div>
+          <span class="font-bold ${b.isPos ? 'text-emerald-400' : 'text-red-400'}">${b.amount}</span>
         </div>
       `).join('');
     }
